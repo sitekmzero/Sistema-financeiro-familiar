@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import Layout from '@/components/Layout'
 
@@ -40,33 +40,35 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Signup />} />
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Signup />} />
 
-        {/* Protected Application Routes with Layout */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Index />} />
-          <Route path="transacoes" element={<Transactions />} />
-          <Route path="dividas" element={<Debts />} />
-          <Route path="reserva" element={<Reserve />} />
-          <Route path="viagens" element={<Trips />} />
-          <Route path="relatorios" element={<Reports />} />
-          <Route path="documentos" element={<Documents />} />
-          <Route path="chat" element={<Chat />} />
-        </Route>
+          {/* Protected Application Routes with Layout */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Index />} />
+            <Route path="transacoes" element={<Transactions />} />
+            <Route path="dividas" element={<Debts />} />
+            <Route path="reserva" element={<Reserve />} />
+            <Route path="viagens" element={<Trips />} />
+            <Route path="relatorios" element={<Reports />} />
+            <Route path="documentos" element={<Documents />} />
+            <Route path="chat" element={<Chat />} />
+          </Route>
 
-        {/* 404 Route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </AuthProvider>
   )
 }
