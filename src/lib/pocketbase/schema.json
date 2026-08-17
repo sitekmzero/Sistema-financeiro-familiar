@@ -1,0 +1,819 @@
+{
+  "generatedAt": "2026-08-17T20:45:41.344Z",
+  "collections": [
+    {
+      "name": "users",
+      "type": "auth",
+      "apiRules": {
+        "list": "id = @request.auth.id",
+        "view": "id = @request.auth.id",
+        "create": "",
+        "update": "id = @request.auth.id",
+        "delete": "id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "avatar",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
+        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
+      ]
+    },
+    {
+      "name": "bank_accounts",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "bank_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "balance",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_bank_accounts_user ON bank_accounts (user)"]
+    },
+    {
+      "name": "transactions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "description",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["income", "expense"]
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Alimentação",
+            "Transporte",
+            "Moradia",
+            "Saúde",
+            "Lazer",
+            "Educação",
+            "Assinaturas",
+            "Renda",
+            "Outros"
+          ]
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "account",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "bank_accounts"
+        },
+        {
+          "name": "source",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["manual", "pdf", "whatsapp", "agent"]
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_tx_user_date ON transactions (user, date DESC)",
+        "CREATE INDEX idx_tx_category ON transactions (category)",
+        "CREATE INDEX idx_tx_type ON transactions (type)"
+      ]
+    },
+    {
+      "name": "debts",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "creditor",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "remaining_amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "interest_rate",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "monthly_payment",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["em_dia", "atrasada", "paga"]
+        },
+        {
+          "name": "strategy",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["snowball", "avalanche"]
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_debts_user_status ON debts (user, status)",
+        "CREATE INDEX idx_debts_due_date ON debts (due_date)"
+      ]
+    },
+    {
+      "name": "debt_payments",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "debt",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "debts"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_debt_payments_user_debt ON debt_payments (user, debt)"]
+    },
+    {
+      "name": "reserve_goals",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "target_amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "monthly_contribution",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deadline",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_reserve_goals_user ON reserve_goals (user)"]
+    },
+    {
+      "name": "reserve_contributions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "goal",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "reserve_goals"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_reserve_contrib_user_goal ON reserve_contributions (user, goal)"
+      ]
+    },
+    {
+      "name": "trips",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "destination",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "budget",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "saved_amount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["planejando", "reservado", "finalizada"]
+        },
+        {
+          "name": "checklist",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_trips_user_start ON trips (user, start_date)"]
+    },
+    {
+      "name": "trip_items",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "trip",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "trips"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["transporte", "hospedagem", "alimentacao", "passeios", "extras"]
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_trip_items_user_trip ON trip_items (user, trip)"]
+    },
+    {
+      "name": "documents",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "filename",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["parsing", "review", "imported", "failed"]
+        },
+        {
+          "name": "parsed_text",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "import_data",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_documents_user ON documents (user)"]
+    },
+    {
+      "name": "chat_messages",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "role",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["user", "agent"]
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "command",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_chat_messages_user_created ON chat_messages (user, created DESC)"
+      ]
+    },
+    {
+      "name": "weekly_reports",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "week_start",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "week_end",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_income",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_expense",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "net",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "insight",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "tip",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vector",
+          "type": "vector",
+          "required": false,
+          "system": false,
+          "vectorDimensions": 1536,
+          "vectorDistance": "cosine"
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_weekly_reports_user_week ON weekly_reports (user, week_start DESC)"
+      ]
+    }
+  ]
+}
