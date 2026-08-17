@@ -23,11 +23,11 @@ import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 
 const COMMAND_CHIPS = [
-  { label: '/resumo', desc: 'Espelho geral financeiro' },
-  { label: '/dividas', desc: 'Status e estratégias de dívidas' },
-  { label: '/reserva', desc: 'Progresso do escudo de emergência' },
-  { label: '/relatorio', desc: 'Último relatório e insights' },
-  { label: '/dica', desc: 'Dica dos mentores Abraham & Bachar' },
+  { label: '/resumo', desc: 'Consolidado familiar completo' },
+  { label: '/retirada', desc: 'Motor de Pró-labore necessário' },
+  { label: '/gabriel', desc: 'Resumo de gastos do filho Gabriel' },
+  { label: 'Quanto gastei com Facebook Ads', desc: 'Consulta marketing Transluga' },
+  { label: 'Quanto custa o Jaguar por mês', desc: 'Custo mensal do veículo Jaguar' },
 ]
 
 export default function Chat() {

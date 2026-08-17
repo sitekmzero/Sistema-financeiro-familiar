@@ -33,15 +33,32 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Landmark,
+  Building2,
+  UserCheck,
+  Shield,
+  DollarSign,
+  Calculator,
+  Calendar,
+  HeartHandshake,
+} from 'lucide-react'
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [debts, setDebts] = useState<Debt[]>([])
+  const [accounts, setAccounts] = useState<any[]>([])
   const [reserveGoals, setReserveGoals] = useState<ReserveGoal[]>([])
   const [trips, setTrips] = useState<Trip[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeProfileFilter, setActiveProfileProfileFilter] = useState<
+    'all' | 'adriana' | 'luiz' | 'gabriel'
+  >('all')
 
   // Quick Pay Modal
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null)
@@ -54,16 +71,18 @@ export default function Dashboard() {
   // Load all initial data
   const loadData = async () => {
     try {
-      const [txList, debtList, goalsList, tripList] = await Promise.all([
-        financeService.getTransactions(50),
+      const [txList, debtList, goalsList, tripList, accList] = await Promise.all([
+        financeService.getTransactions(100),
         financeService.getDebts(),
         financeService.getReserveGoals(),
         financeService.getTrips(),
+        financeService.getAccounts(),
       ])
       setTransactions(txList)
       setDebts(debtList)
       setReserveGoals(goalsList)
       setTrips(tripList)
+      setAccounts(accList)
     } catch (err) {
       console.error('Failed loading dashboard data:', err)
     } finally {
@@ -88,6 +107,21 @@ export default function Dashboard() {
   useRealtime('trips', () => {
     financeService.getTrips().then(setTrips)
   })
+
+  // Pro-labore calculation: Fixed Structural Debts + Credit Cards average
+  const proLaboreCalc = useMemo(() => {
+    const fixedDebts = debts.reduce((acc, d) => acc + (d.monthly_payment || 0), 0) // Caixa 7501.77 + Porto A 1936.90 + Porto B 1334.19 = 10772.86
+    const creditCardsExpense = transactions
+      .filter((t) => t.type === 'expense')
+      .reduce((acc, t) => acc + t.amount, 0)
+    const cardEstimate = creditCardsExpense > 0 ? creditCardsExpense : 3500 // estimate fallback if no card tx
+    const totalRequired = fixedDebts + cardEstimate
+    return {
+      fixedDebts,
+      cardEstimate,
+      totalRequired,
+    }
+  }, [debts, transactions])
 
   // Computed Financial Totals
   const { totalIncome, totalExpense, balance } = useMemo(() => {
@@ -313,10 +347,151 @@ export default function Dashboard() {
         <div className="mt-5 pt-4 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-300">
           <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <strong className="text-emerald-400 font-semibold">Mensagem do James:</strong> "Você
-            está no caminho certo! Com o próximo aporte de R$ 450 você quitará a primeira pendência
-            e liberará mais fluxo para a viagem familiar."
+            <strong className="text-emerald-400 font-semibold">Mensagem do James:</strong>{' '}
+            "Bem-vindos ao plano de implantação real do James Family Office! Todas as contas e
+            dívidas estruturais estão catalogadas. A energia da clareza atrai abundância
+            exponencial!"
           </span>
+        </div>
+      </div>
+
+      {/* Multi-Profile Selector Bar & Motor de Pró-labore */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Motor de Pró-labore Widget */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-[#111827] to-emerald-950/40 border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                <Calculator className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-base sm:text-lg text-slate-100 flex items-center gap-2">
+                  Motor de Pró-labore
+                  <span className="text-xs font-normal text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Retirada Mínima Necessária
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Total necessário das empresas (Transluga & Km Zero) para cobrir despesas PF do mês
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/chat')}
+              className="border-emerald-500/40 text-emerald-300 hover:bg-emerald-950 text-xs hidden sm:flex"
+            >
+              /retirada no Chat
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5">
+              <div className="text-[11px] text-slate-400 font-medium">
+                1. Parcelas Dívidas Fixas
+              </div>
+              <div className="text-lg font-heading font-bold text-rose-400 mt-1">
+                {formatCurrency(proLaboreCalc.fixedDebts)}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1">
+                Caixa (7,5k) + Consórcios Porto A e B (3,2k)
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5">
+              <div className="text-[11px] text-slate-400 font-medium">
+                2. Média / Faturas Cartões
+              </div>
+              <div className="text-lg font-heading font-bold text-amber-400 mt-1">
+                +{formatCurrency(proLaboreCalc.cardEstimate)}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1">
+                Soma das faturas dos 6 cartões familiares
+              </div>
+            </div>
+
+            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-xl p-3.5">
+              <div className="text-[11px] text-emerald-300 font-bold uppercase tracking-wider">
+                Retirada Mínima Requerida
+              </div>
+              <div className="text-xl font-heading font-bold text-emerald-400 mt-1">
+                {formatCurrency(proLaboreCalc.totalRequired)}
+              </div>
+              <div className="text-[10px] text-emerald-300/80 mt-1">
+                Aporte necessário de Pró-labore este mês
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-3 flex items-center justify-between">
+            <span>
+              ℹ️ <strong className="text-slate-200">Regra de Ouro PJ ➔ PF:</strong> Gastos
+              empresariais operacionais da Transluga/KmZero continuam no PJ. Apenas o valor da
+              Retirada entra no sistema como Receita.
+            </span>
+          </div>
+        </div>
+
+        {/* Visão Multi-Perfil selector & Previdência Social */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="font-heading font-bold text-base text-slate-100 mb-1 flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-emerald-400" /> Perfis Familiares
+            </h3>
+            <p className="text-xs text-slate-400 mb-4">Visão individual e consolidada</p>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => setActiveProfileProfileFilter('all')}
+                className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between text-xs transition ${
+                  activeProfileFilter === 'all'
+                    ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 font-bold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span>Visão Consolidada (Family Office)</span>
+                <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
+                  Adriana + Luiz
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveProfileProfileFilter('adriana')}
+                className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between text-xs transition ${
+                  activeProfileFilter === 'adriana'
+                    ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 font-bold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span>Adriana Araújo (Admin)</span>
+                <span className="text-[10px] text-emerald-400">Visão Total</span>
+              </button>
+
+              <button
+                onClick={() => setActiveProfileProfileFilter('gabriel')}
+                className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between text-xs transition ${
+                  activeProfileFilter === 'gabriel'
+                    ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 font-bold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span>Gabriel Araújo (Filho)</span>
+                <span className="text-[10px] text-slate-400">gabriel-foa@hotmail.com</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Previdência Social Card */}
+          <div className="mt-4 pt-4 border-t border-slate-800 bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 mb-1">
+              <Shield className="w-4 h-4" /> Previdência Social (INSS)
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Previsão de Aposentadoria Social da Adriana mantida e catalogada como ativo de suporte
+              complementar.
+            </p>
+          </div>
         </div>
       </div>
 
