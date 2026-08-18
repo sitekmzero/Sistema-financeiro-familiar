@@ -1,86 +1,133 @@
 # Memory_Work — James Financeiro Familiar
 
-> Atualizado: 2026-08-19 | Última ação: Correções estruturais pós-Onda 4
+> Registro de trabalho do James Family Office (Adriana).
+> Cada execução registra: onda, o que foi feito, migrations aplicadas e pendências.
 
 ---
 
-## ✅ O Que Já Foi Feito
+## Status Geral
 
-| # | Onda | Entregável | Status |
-|---|------|-----------|--------|
-| 1 | Limpeza | 6 transações mock deletadas | ✅ |
-| 2 | Dashboard | Termômetro Vibracional, Gastos Alinhados vs Impulso, Insight do Dia, Bolhas de Categorias, Botão de Gratidão | ✅ |
-| 3 | James 2.0 | 20 princípios (12 Abraham + 8 Bachar), FAQ 9 perguntas | ✅ |
-| 4 | Schema | Campos de parcela, portador, original_description, document_imports, gratitude_journal | ✅ |
-| 5 | Parser C6 | 190 transações importadas, 4 duplicatas detectadas, saldo R$ 145,78 | ⚠️ Categorias erradas |
-| 6 | Conciliação | Tela /conciliacao com 3 etapas, menu lateral | ⚠️ Circular (compara dados contra si mesmos) |
-| 7 | Cadastros | Fornecedores (19), Categorias (15), Membros (3), Orçamentos (7) | ✅ |
+**Última execução:** Onda 5 (CRUD de Categorias + Cadastros de Bancos e Contas)
+**Data:** 2025
 
 ---
 
-## 🔴 O Que Está Quebrado
+## Ondas / Execuções
 
-| # | Problema | Causa | Impacto |
-|---|----------|-------|---------|
-| 1 | Categorizações erradas | Parser usa palavras-chave genéricas; "QUILOMETRO ZERO" cai em Moradia | Relatórios e dashboard distorcidos |
-| 2 | Conciliação circular | Compara transactions vs transactions da mesma conta; não usa raw_data como verdade | Nunca detecta divergência real |
-| 3 | Migration 0010 | Função matchSupplier quebrou com undefined; corrigida e reaplicada mas sem validação de integridade | Risco de dados inconsistentes |
+### Onda 1 — Fundação (concluída)
+- Setup inicial do projeto React + Vite + TypeScript + Tailwind + shadcn/ui
+- Conexão com PocketBase (Skip Cloud)
+- Coleções base: users, family_members, transactions, bank_accounts, suppliers, budgets, document_imports, debts, reserve_goals, reserve_contributions, trips, trip_items, documents, chat_messages
+
+### Onda 2 — Categorias & Conciliação (concluída)
+- **C1 (CONCLUÍDO):** Categorias corrigidas — `CATEGORY_META` expandido com todas as categorias usadas (Veículo, Tecnologia, Business, Pet, Vestuário, Seguros, Consórcio, Transferência, Tarifas, Pagamento de Cartão, Investimento, Renda).
+- **C2 (CONCLUÍDO):** Conciliação refatorada — fluxo de batimento linha-a-linha (Conjunto A = raw_data do PDF, Conjunto B = transações do sistema), status OK/divergente/não encontrada/sobrando, conferência de saldo, fila de revisão.
+- **C3 (CONCLUÍDO):** Tabela `banks` criada (migration 0012) — coleção para instituições financeiras.
+
+### Onda 3 — Importação C6 & Parser (concluída)
+- Parser do extrato C6 (PDF → raw_data em document_imports)
+- Tela de Conciliação com seleção de conta e extrato
+- Importação de transações via raw_data (verdade absoluta)
+
+### Onda 4 — Refinos UI (concluída)
+- Tela de Transações com impressão A4, seleção de colunas, filtros
+- Tela de Fornecedores com Sheet de CRUD completo
+- Tela de Orçamentos com progress bars e alertas
+- Tela de Membros
+
+### Onda 5 — CRUD de Categorias + Bancos + Contas (concluída) ⭐ EXECUÇÃO ATUAL
+
+**Feito nesta execução:**
+
+1. **CRUD de Categorias ativado** (`src/pages/Categorias.tsx`)
+   - Removido botão mockado "Em breve"
+   - Sheet de criação/edição com campos: nome, cor (color picker), ícone (select de ~33 ícones Lucide com preview)
+   - AlertDialog de confirmação de exclusão
+   - Categorias salvas no banco (nova coleção `categories`, migration 0013)
+   - Seed com as 20 categorias padrão (is_default=true)
+   - `CATEGORY_META` mantido como fallback; categorias do banco prevalecem
+   - Hook `useCategories` mescla banco + fallback
+
+2. **Cadastros de Bancos criado** (`src/pages/Bancos.tsx`)
+   - Tabela com nome, código Febraban, ISPB, cor, logo
+   - Sheet de CRUD com autocomplete via Brasil API (`https://brasilapi.com.br/api/banks/v1`)
+   - AlertDialog de exclusão
+   - Integração com coleção `banks` (migration 0012, já existente)
+
+3. **Cadastros de Contas & Cartões criado** (`src/pages/Contas.tsx`)
+   - Tabela com Nome, Tipo, Banco, Saldo/Limite, Status
+   - Sheet de formulário DINÂMICO por tipo:
+     - Conta Corrente: banco, agência, número, saldo, limite cheque especial, taxa de juros
+     - Poupança: banco, agência, número, saldo, rendimento % a.a.
+     - Cartão de Crédito: bandeira, titular (family_members), adicionais (tags), limite, dia fechamento, dia vencimento
+     - Investimento: banco/corretora, tipo (CDB/Tesouro/Ações/FIIs/LCI-LCA/Previdência/Fundos/Poupança/Cripto/Outros), valor aplicado, rentabilidade descritiva, rentabilidade % a.a., liquidez, vencimento, indexador
+     - Consórcio: administradora, cota, crédito total, parcelas pagas/totais, vencimento
+   - Migration 0014: adicionou campos ao `bank_accounts` (todos opcionais — registros antigos continuam funcionando)
+   - **NÃO migrou o schema existente** — apenas estendeu
+
+4. **CadastrosIndex atualizado** (`src/pages/CadastrosIndex.tsx`)
+   - 7 cards: Fornecedores, Categorias, Membros, Orçamentos, Bancos, Contas & Cartões, Fontes de Renda
+   - Card "Fontes de Renda" linka para placeholder visível (página "Em desenvolvimento" com ícone e layout bonito)
+
+5. **Rotas adicionadas** (`src/App.tsx`)
+   - `/cadastros/bancos` → Bancos
+   - `/cadastros/contas` → Contas
+   - `/cadastros/fontes-renda` → FontesRenda (placeholder)
+
+6. **Selects de categoria adaptados para fonte dinâmica**
+   - `Transactions.tsx`: filtro e formulário usam `useCategories()` em vez de array estático
+   - `Fornecedores.tsx`: filtro e formulário usam `useCategories()`
+   - `Orcamentos.tsx`: formulário usa `useCategories()`
+   - `Conciliacao.tsx`: fila de revisão usa `useCategories()`
+   - `transactions.category` e `suppliers.category` convertidos de select → text (migration 0013) para aceitar categorias customizadas
+
+**Migrations aplicadas nesta execução:**
+- `0013_create_categories.js` — coleção `categories` + seed + conversão select→text
+- `0014_bank_accounts_extended.js` — campos de contas/cartões/investimentos/consórcios
+
+**Arquivos criados:**
+- `src/pages/Bancos.tsx`
+- `src/pages/Contas.tsx`
+- `src/pages/FontesRenda.tsx`
+- `src/hooks/use-categories.ts`
+- `pocketbase/migrations/0013_create_categories.js`
+- `pocketbase/migrations/0014_bank_accounts_extended.js`
+
+**Arquivos modificados:**
+- `src/pages/Categorias.tsx` (reescrito com CRUD completo)
+- `src/pages/CadastrosIndex.tsx` (7 cards)
+- `src/pages/Transactions.tsx` (selects dinâmicos)
+- `src/pages/Fornecedores.tsx` (selects dinâmicos)
+- `src/pages/Orcamentos.tsx` (selects dinâmicos)
+- `src/pages/Conciliacao.tsx` (selects dinâmicos)
+- `src/App.tsx` (rotas)
+- `src/lib/categories.ts` (icon map, mergeCategories, categoryToMeta)
+- `src/services/financeService.ts` (CRUD de categories, banks, accounts estendido)
+- `src/types/finance.ts` (interfaces Bank, Category, BankAccount estendido)
 
 ---
 
-## 🔜 O Que Ainda Precisa Ser Feito
+## Pendências (próximas ondas)
 
-### Correções Estruturais (prioritário)
+### D3 — Fontes de Renda (pendente)
+- Tela `/cadastros/fontes-renda` atualmente é placeholder "Em desenvolvimento"
+- Criar CRUD completo: pró-labore, comissões, aluguéis, dividendos, renda extra
+- Nova coleção `income_sources` provavelmente necessária
 
-| # | Tarefa | Dependência |
-|---|--------|-------------|
-| C1 | Corrigir categorias do parser (Quilômetro Zero→Renda, Porto Seguro→Consórcio, etc.) | Nenhuma |
-| C2 | Refazer conciliação: comparar document_imports.raw_data vs transactions | C1 |
-| C3 | Adicionar tabela banks (nome, código ISPB, logo) — sem migrar bank_accounts | Nenhuma |
-| C4 | Preparar parser multi-banco: detectar banco pelo PDF e rotear para conta correta | C3 |
+### D4 — Investimentos (pendente)
+- Tela dedicada de investimentos (além do cadastro na tela de Contas)
+- Visão consolidada de carteira, rentabilidade real, projeções
 
-### Cadastros Faltantes (após correções)
-
-| # | Tela | O que cadastra |
-|---|------|----------------|
-| D1 | /cadastros/bancos | Instituições financeiras (via Brasil API) |
-| D2 | /cadastros/contas | Contas correntes, poupanças, cartões de crédito (substitui bank_accounts atual) |
-| D3 | /cadastros/fontes-renda | Tipos de entrada: pró-labore, comissão, renda extra |
-| D4 | /cadastros/investimentos | CDB, Tesouro, Ações, com tipo, rentabilidade, liquidez |
-
-### Futuro
-
-| # | Tarefa | Bloqueio |
-|---|--------|----------|
-| F1 | WhatsApp (Onda 5) | Token Meta Cloud API + Phone Number ID |
-| F2 | Parser Inter | Após C4 |
-| F3 | Parser Porto Visa fatura | Após C4 |
-| F4 | Parser Porto Master fatura | Após C4 |
-| F5 | Open Finance (Onda 6) | Adiado — imaturo |
+### F1-F5 — Funcionalidades futuras (pendentes)
+- F1: Relatórios avançados (mensal, anual, por categoria, por membro)
+- F2: Exportação para Excel/CSV
+- F3: Dashboard executivo com gráficos
+- F4: Alertas e notificações (orçamento estourando, vencimentos)
+- F5: Importação de extratos de outros bancos (além do C6)
 
 ---
 
-## 🗂️ Estrutura de Tabelas (Schema Atual)
-
-| Coleção | Propósito | Estado |
-|---------|-----------|--------|
-| transactions | Lançamentos financeiros | ⚠️ Dados reais + categorias erradas |
-| bank_accounts | Contas e cartões (misturados) | ⚠️ Precisa separar por tipo |
-| suppliers | Fornecedores com aliases | ✅ |
-| family_members | Membros da família | ✅ |
-| budgets | Orçamentos mensais | ✅ |
-| debts | Dívidas estruturais (Caixa, Porto) | ✅ |
-| document_imports | Rastreamento de arquivos processados | ✅ Schema ok |
-| gratitude_journal | Diário de gratidão financeira | ✅ |
-| documents | Upload de arquivos | ✅ |
-| reserve_goals | Metas de reserva | ✅ |
-| trip_goals | Metas de viagem | ✅ |
-
----
-
-## 📋 Regras de Execução
-
-1. **Nunca propor mais de 3-4 mudanças estruturais numa execução.** Se algo é fundação, vai sozinho.
-2. **Corrigir antes de expandir.** Nada de tela nova em cima de dados errados.
-3. **Testar com dados reais.** O preview deve refletir os números reais, não placeholders.
-4. **Cada execução commitada = versão nova.** Se falhar, corrigir e reexecutar; não acumular débito técnico.
+## Regras do James (Memory_James.md)
+- Ver `Memory_James.md` para todas as regras de categorização, aliases e conduta.
+- **NOVIDADE (Onda 5):** antes de finalizar qualquer execução, TODOS os botões visíveis devem estar ativos (sem mock/toast "em breve").
+- **NOVIDADE (Onda 5):** sempre atualizar `Memory_Work.mdr` e `Memory_James.md` ao final de cada execução.

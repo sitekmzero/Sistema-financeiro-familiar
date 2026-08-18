@@ -8,7 +8,65 @@ export interface BankAccount {
   card_brand?: 'visa' | 'mastercard' | 'elo' | 'amex'
   card_last_four?: string
   additional_holders?: Array<{ name: string; last_four: string }>
+  // Onda 5 — campos estendidos (migration 0014)
+  bank?: string
+  agency?: string
+  account_number?: string
+  overdraft_limit?: number
+  interest_rate?: number
+  savings_rate?: number
+  credit_limit?: number
+  card_holder_type?: 'titular' | 'adicional'
+  card_holder?: string
+  closing_day?: number
+  due_day?: number
+  investment_type?:
+    | 'CDB'
+    | 'Tesouro'
+    | 'Ações'
+    | 'FIIs'
+    | 'LCI-LCA'
+    | 'Previdência'
+    | 'Fundos'
+    | 'Poupança'
+    | 'Cripto'
+    | 'Outros'
+  invested_amount?: number
+  yield_description?: string
+  yield_rate?: number
+  liquidity?: 'Diária' | 'No vencimento' | 'D+30' | 'D+90' | 'Indefinida'
+  maturity_date?: string
+  indexer?: 'CDI' | 'IPCA' | 'Selic' | 'Prefixado' | 'IGP-M'
+  consortium_admin?: string
+  consortium_quota?: number
+  consortium_credit?: number
+  installments_paid?: number
+  installments_total?: number
+  status?: 'active' | 'inactive' | 'blocked'
   user: string
+  created: string
+  updated: string
+}
+
+export interface Bank {
+  id: string
+  name: string
+  code: string
+  ispb?: string
+  logo_url?: string
+  color?: string
+  user?: string
+  created: string
+  updated: string
+}
+
+export interface Category {
+  id: string
+  name: string
+  color?: string
+  icon?: string
+  is_default?: boolean
+  user?: string
   created: string
   updated: string
 }

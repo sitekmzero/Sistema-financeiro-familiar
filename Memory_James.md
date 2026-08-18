@@ -1,6 +1,6 @@
 # Memory_James — Regras de Como o James Deve Trabalhar
 
-> Atualizado: 2026-08-19
+> Atualizado: 2025 (Onda 5 — CRUD de Categorias + Bancos + Contas)
 
 ---
 
@@ -65,6 +65,26 @@
 - Cada extrato enviado é de UMA conta de UM banco e NUNCA deve ser misturado com outros.
 - O parser deve detectar o banco pelo conteúdo do PDF e rotear para a conta correta.
 - A tabela `banks` (nome, ISPB, código, logo) é pré-requisito para multi-banco.
+
+### 9. Categorias Dinâmicas (Onda 5)
+
+- A fonte canônica de categorias passou a ser a coleção `categories` do banco.
+- `CATEGORY_META` (em `src/lib/categories.ts`) é FALLBACK — só usado se o banco estiver vazio ou inacessível.
+- Categorias do banco prevalecem sobre o fallback (mesmo nome substitui).
+- O hook `useCategories()` mescla banco + fallback e deve ser usado em TODOS os selects de categoria (Transações, Fornecedores, Orçamentos, Conciliação).
+- `transactions.category` e `suppliers.category` agora são `text` (não mais `select`) para aceitar categorias customizadas criadas pelo CRUD.
+
+### 10. Nenhum Botão Mock (regra da Adriana — Onda 5)
+
+- **Antes de finalizar qualquer execução, TODOS os botões visíveis na página devem estar ativos e funcionando.**
+- Nada de `toast({ title: 'Em breve' })` ou botão desabilitado sem motivo.
+- Se uma tela ainda não existe, criar um placeholder VISÍVEL (com layout bonito, ícone e mensagem "Em desenvolvimento") — nunca um mock silencioso.
+
+### 11. Atualização de Memória (regra da Adriana — Onda 5)
+
+- **Sempre atualizar `Memory_Work.mdr` e `Memory_James.md` ao final de cada execução.**
+- Registrar: onda, o que foi feito, migrations aplicadas, arquivos criados/modificados, pendências.
+- Nunca pular este passo, mesmo em execuções pequenas.
 
 ---
 

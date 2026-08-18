@@ -18,7 +18,23 @@ import {
   Receipt,
   CreditCard,
   TrendingUp,
+  Tag,
+  ShoppingBag,
+  Plane,
+  Gift,
+  Dumbbell,
+  Baby,
+  Wrench,
+  Zap,
+  Droplet,
+  Wifi,
+  Phone,
+  PiggyBank,
+  Wallet,
+  Building2,
+  Globe,
 } from 'lucide-react'
+import type { Category } from '@/types/finance'
 
 export interface CategoryMeta {
   name: string
@@ -29,9 +45,59 @@ export interface CategoryMeta {
 }
 
 /**
+ * Mapa de ícones Lucide disponíveis no formulário de categorias.
+ * A chave (string) é o que guardamos no banco (categories.icon).
+ */
+export const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed,
+  Car,
+  HeartPulse,
+  Home,
+  Repeat,
+  Cpu,
+  Briefcase,
+  PartyPopper,
+  GraduationCap,
+  PawPrint,
+  Shirt,
+  Bus,
+  Package,
+  Landmark,
+  ArrowLeftRight,
+  Receipt,
+  CreditCard,
+  TrendingUp,
+  Tag,
+  ShoppingBag,
+  Plane,
+  Gift,
+  Dumbbell,
+  Baby,
+  Wrench,
+  Zap,
+  Droplet,
+  Wifi,
+  Phone,
+  PiggyBank,
+  Wallet,
+  Building2,
+  Globe,
+}
+
+export const ICON_OPTIONS = Object.keys(ICON_MAP)
+
+export function resolveIcon(name?: string): LucideIcon {
+  if (name && ICON_MAP[name]) return ICON_MAP[name]
+  return Tag
+}
+
+/**
  * Padrão de categorias do James Family Office.
  * O campo `name` corresponde aos valores aceitos pela coleção `transactions.category`
  * (estendido com as categorias dos cadastros — Veículo, Tecnologia, etc.).
+ *
+ * Servem como FALLBACK quando não há conexão com o banco ou a coleção
+ * `categories` está vazia. A fonte canônica passou a ser o banco (Onda 5).
  */
 export const CATEGORY_META: CategoryMeta[] = [
   {
@@ -170,10 +236,67 @@ export const CATEGORY_META: CategoryMeta[] = [
   },
 ]
 
+const FALLBACK_OTHERS = CATEGORY_META[CATEGORY_META.length - 1]
+
+/** Resolve o meta de uma categoria pelo nome, usando o array estático (fallback). */
 export function getCategoryMeta(name?: string): CategoryMeta {
-  if (!name) return CATEGORY_META[CATEGORY_META.length - 1]
-  return (
-    CATEGORY_META.find((c) => c.name.toLowerCase() === name.toLowerCase()) ||
-    CATEGORY_META[CATEGORY_META.length - 1]
-  )
+  if (!name) return FALLBACK_OTHERS
+  return CATEGORY_META.find((c) => c.name.toLowerCase() === name.toLowerCase()) || FALLBACK_OTHERS
+}
+
+/**
+ * Converte uma categoria vinda do banco (coleção `categories`) em CategoryMeta.
+ * Se faltar cor/ícone, herda do fallback estático (se o nome existir) ou usa
+ * defaults sensatos.
+ */
+export function categoryToMeta(cat: Category): CategoryMeta {
+  const fallback = getCategoryMeta(cat.name)
+  const sameName = fallback.name === cat.name
+  const color = cat.color || fallback.color || '#94A3B8'
+  // Se a categoria do banco tem nome de um fallback, reusa o ícone do fallback
+  // quando icon estiver vazio — fallback.icon é o próprio componente Lucide.
+  const icon: LucideIcon =
+    cat.icon && ICON_MAP[cat.icon] ? ICON_MAP[cat.icon] : sameName ? fallback.icon : Tag
+  return {
+    name: cat.name,
+    color,
+    bg: sameName ? fallback.bg : 'bg-slate-500/15',
+    ring: sameName ? fallback.ring : 'ring-slate-500/30',
+    icon,
+  }
+}
+
+/**
+ * Mescla categorias do banco com o fallback estático.
+ * - Categorias do banco prevalecem (mesmo nome substitui o fallback).
+ * - Categorias do fallback que não existem no banco são adicionadas no final,
+ *   garantindo que a lista nunca fique vazia.
+ * - Ordena: padrão primeiro (is_default), depois customizadas, alfabético.
+ */
+export function mergeCategories(dbCats: Category[]): CategoryMeta[] {
+  const seen = new Set<string>()
+  const merged: CategoryMeta[] = []
+
+  const sortedDb = [...dbCats].sort((a, b) => {
+    if (!!a.is_default !== !!b.is_default) return a.is_default ? -1 : 1
+    return a.name.localeCompare(b.name, 'pt-BR')
+  })
+
+  for (const c of sortedDb) {
+    const key = c.name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    merged.push(categoryToMeta(c))
+  }
+
+  // adiciona fallbacks que não vieram do banco
+  for (const m of CATEGORY_META) {
+    const key = m.name.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      merged.push(m)
+    }
+  }
+
+  return merged
 }

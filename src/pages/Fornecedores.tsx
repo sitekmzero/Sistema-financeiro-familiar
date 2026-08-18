@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { financeService } from '@/services/financeService'
-import { CATEGORY_META, getCategoryMeta } from '@/lib/categories'
+import { getCategoryMeta } from '@/lib/categories'
+import { useCategories } from '@/hooks/use-categories'
 import type { Supplier } from '@/types/finance'
 import { Truck, Plus, Search, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ const RECURRENCES = ['Mensal', 'Semanal', 'Esporádico', 'Anual'] as const
 
 export default function Fornecedores() {
   const { toast } = useToast()
+  const { metas: categoryMetas } = useCategories()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -148,7 +150,7 @@ export default function Fornecedores() {
           </SelectTrigger>
           <SelectContent className="bg-[#111827] border-slate-700 text-slate-100">
             <SelectItem value="all">Todas as categorias</SelectItem>
-            {CATEGORY_META.map((c) => (
+            {categoryMetas.map((c) => (
               <SelectItem key={c.name} value={c.name}>
                 {c.name}
               </SelectItem>
@@ -266,7 +268,7 @@ export default function Fornecedores() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#111827] border-slate-700 text-slate-100">
-                  {CATEGORY_META.map((c) => (
+                  {categoryMetas.map((c) => (
                     <SelectItem key={c.name} value={c.name}>
                       {c.name}
                     </SelectItem>

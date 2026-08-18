@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T16:02:21.864Z",
+  "generatedAt": "2026-08-18T19:05:19.138Z",
   "collections": [
     {
       "name": "users",
@@ -132,6 +132,168 @@
           "type": "json",
           "required": false,
           "system": false
+        },
+        {
+          "name": "bank",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "banks"
+        },
+        {
+          "name": "agency",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "account_number",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "overdraft_limit",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "interest_rate",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "savings_rate",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "credit_limit",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "card_holder_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["titular", "adicional"]
+        },
+        {
+          "name": "card_holder",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "family_members"
+        },
+        {
+          "name": "closing_day",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "due_day",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "investment_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "CDB",
+            "Tesouro",
+            "Ações",
+            "FIIs",
+            "LCI-LCA",
+            "Previdência",
+            "Fundos",
+            "Poupança",
+            "Cripto",
+            "Outros"
+          ]
+        },
+        {
+          "name": "invested_amount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "yield_description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "yield_rate",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "liquidity",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Diária", "No vencimento", "D+30", "D+90", "Indefinida"]
+        },
+        {
+          "name": "maturity_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "indexer",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["CDI", "IPCA", "Selic", "Prefixado", "IGP-M"]
+        },
+        {
+          "name": "consortium_admin",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consortium_quota",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consortium_credit",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "installments_paid",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "installments_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["active", "inactive", "blocked"]
         }
       ],
       "indexes": ["CREATE INDEX idx_bank_accounts_user ON bank_accounts (user)"]
@@ -165,34 +327,6 @@
           "required": true,
           "system": false,
           "selectValues": ["income", "expense"]
-        },
-        {
-          "name": "category",
-          "type": "select",
-          "required": true,
-          "system": false,
-          "selectValues": [
-            "Alimentação",
-            "Transporte",
-            "Moradia",
-            "Saúde",
-            "Lazer",
-            "Educação",
-            "Assinaturas",
-            "Renda",
-            "Outros",
-            "Consórcio",
-            "Transferência",
-            "Tarifas",
-            "Pagamento de Cartão",
-            "Investimento",
-            "Veículo",
-            "Tecnologia",
-            "Business",
-            "Pet",
-            "Vestuário",
-            "Seguros"
-          ]
         },
         {
           "name": "date",
@@ -291,6 +425,12 @@
           "name": "import_hash",
           "type": "text",
           "required": false,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "required": true,
           "system": false
         }
       ],
@@ -943,34 +1083,6 @@
           "system": false
         },
         {
-          "name": "category",
-          "type": "select",
-          "required": false,
-          "system": false,
-          "selectValues": [
-            "Alimentação",
-            "Transporte",
-            "Moradia",
-            "Saúde",
-            "Lazer",
-            "Educação",
-            "Assinaturas",
-            "Renda",
-            "Outros",
-            "Consórcio",
-            "Transferência",
-            "Tarifas",
-            "Pagamento de Cartão",
-            "Investimento",
-            "Veículo",
-            "Tecnologia",
-            "Business",
-            "Pet",
-            "Vestuário",
-            "Seguros"
-          ]
-        },
-        {
           "name": "recurrence",
           "type": "select",
           "required": false,
@@ -1019,6 +1131,12 @@
         {
           "name": "auto_detect",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "text",
           "required": false,
           "system": false
         }
@@ -1384,6 +1502,65 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_banks_code ON banks (code)"]
+    },
+    {
+      "name": "categories",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.id != \"\"",
+        "update": "@request.auth.id != \"\"",
+        "delete": "@request.auth.id != \"\""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "icon",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_default",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_categories_name ON categories (name)"]
     }
   ]
 }

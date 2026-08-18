@@ -1,6 +1,8 @@
 import pb from '@/lib/pocketbase/client'
 import type {
   BankAccount,
+  Bank,
+  Category,
   Transaction,
   Debt,
   DebtPayment,
@@ -597,5 +599,62 @@ export const financeService = {
       aliases.push(a)
     }
     return await pb.collection('suppliers').update<Supplier>(supplierId, { aliases })
+  },
+
+  // ----------------------------------------------------------------
+  // Onda 5 — CRUD de Categorias, Bancos e Contas
+  // ----------------------------------------------------------------
+  // Categories
+  async getCategories(): Promise<Category[]> {
+    return await pb.collection('categories').getFullList<Category>({ sort: 'name' })
+  },
+  async createCategory(data: Partial<Category>): Promise<Category> {
+    return await pb.collection('categories').create<Category>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateCategory(id: string, data: Partial<Category>): Promise<Category> {
+    return await pb.collection('categories').update<Category>(id, data)
+  },
+  async deleteCategory(id: string): Promise<boolean> {
+    return await pb.collection('categories').delete(id)
+  },
+
+  // Banks
+  async getBanks(): Promise<Bank[]> {
+    return await pb.collection('banks').getFullList<Bank>({ sort: 'name' })
+  },
+  async createBank(data: Partial<Bank>): Promise<Bank> {
+    return await pb.collection('banks').create<Bank>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateBank(id: string, data: Partial<Bank>): Promise<Bank> {
+    return await pb.collection('banks').update<Bank>(id, data)
+  },
+  async deleteBank(id: string): Promise<boolean> {
+    return await pb.collection('banks').delete(id)
+  },
+
+  // Bank Accounts — CRUD estendido (Onda 5)
+  async getAllAccountsExpanded(): Promise<BankAccount[]> {
+    return await pb.collection('bank_accounts').getFullList<BankAccount>({
+      sort: 'name',
+      expand: 'bank,card_holder',
+    })
+  },
+  async createAccountExtended(data: Partial<BankAccount>): Promise<BankAccount> {
+    return await pb.collection('bank_accounts').create<BankAccount>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateAccountExtended(id: string, data: Partial<BankAccount>): Promise<BankAccount> {
+    return await pb.collection('bank_accounts').update<BankAccount>(id, data)
+  },
+  async deleteAccount(id: string): Promise<boolean> {
+    return await pb.collection('bank_accounts').delete(id)
   },
 }

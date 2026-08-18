@@ -37,6 +37,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
+import { useCategories } from '@/hooks/use-categories'
 
 // ----- helpers -------------------------------------------------------------
 
@@ -51,23 +52,6 @@ const fmtDate = (d: string) => {
     return d
   }
 }
-
-const CATEGORIES = [
-  'Alimentação',
-  'Transporte',
-  'Moradia',
-  'Saúde',
-  'Lazer',
-  'Educação',
-  'Assinaturas',
-  'Renda',
-  'Outros',
-  'Consórcio',
-  'Transferência',
-  'Tarifas',
-  'Pagamento de Cartão',
-  'Investimento',
-] as const
 
 const C6_DOC = 'extrato-c6-180-dias.pdf'
 
@@ -175,6 +159,7 @@ const extractRawLines = (imp?: DocumentImport | null): RawLine[] => {
 
 export default function Conciliacao() {
   const { toast } = useToast()
+  const { metas: categoryMetas } = useCategories()
 
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [imports, setImports] = useState<DocumentImport[]>([])
@@ -820,9 +805,9 @@ export default function Conciliacao() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-[#111827] border-slate-700 text-slate-100">
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
+                          {categoryMetas.map((c) => (
+                            <SelectItem key={c.name} value={c.name}>
+                              {c.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

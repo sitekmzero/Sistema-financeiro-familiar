@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { financeService } from '@/services/financeService'
 import { getCategoryMeta } from '@/lib/categories'
+import { useCategories } from '@/hooks/use-categories'
 import type { Budget, Transaction } from '@/types/finance'
 import { Wallet, Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -42,6 +43,7 @@ const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).pad
 
 export default function Orcamentos() {
   const { toast } = useToast()
+  const { metas: categoryMetas } = useCategories()
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -281,24 +283,9 @@ export default function Orcamentos() {
                   <SelectValue placeholder="ex: Alimentação" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#111827] border-slate-700 text-slate-100">
-                  {[
-                    'Alimentação',
-                    'Transporte',
-                    'Moradia',
-                    'Saúde',
-                    'Lazer',
-                    'Educação',
-                    'Assinaturas',
-                    'Renda',
-                    'Outros',
-                    'Consórcio',
-                    'Transferência',
-                    'Tarifas',
-                    'Pagamento de Cartão',
-                    'Investimento',
-                  ].map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                  {categoryMetas.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

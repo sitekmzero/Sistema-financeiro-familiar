@@ -20,6 +20,9 @@ import Fornecedores from '@/pages/Fornecedores'
 import Categorias from '@/pages/Categorias'
 import Membros from '@/pages/Membros'
 import Orcamentos from '@/pages/Orcamentos'
+import Bancos from '@/pages/Bancos'
+import Contas from '@/pages/Contas'
+import FontesRenda from '@/pages/FontesRenda'
 import NotFound from '@/pages/NotFound'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -75,6 +78,9 @@ export default function App() {
             <Route path="cadastros/categorias" element={<Categorias />} />
             <Route path="cadastros/membros" element={<Membros />} />
             <Route path="cadastros/orcamentos" element={<Orcamentos />} />
+            <Route path="cadastros/bancos" element={<Bancos />} />
+            <Route path="cadastros/contas" element={<Contas />} />
+            <Route path="cadastros/fontes-renda" element={<FontesRenda />} />
           </Route>
 
           {/* 404 Route */}

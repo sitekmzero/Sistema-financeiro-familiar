@@ -47,30 +47,9 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
+import { useCategories } from '@/hooks/use-categories'
+import { getCategoryMeta } from '@/lib/categories'
 import { Link } from 'react-router-dom'
-
-const CATEGORIES = [
-  'Alimentação',
-  'Transporte',
-  'Moradia',
-  'Saúde',
-  'Lazer',
-  'Educação',
-  'Assinaturas',
-  'Renda',
-  'Outros',
-  'Consórcio',
-  'Transferência',
-  'Tarifas',
-  'Pagamento de Cartão',
-  'Investimento',
-  'Veículo',
-  'Tecnologia',
-  'Business',
-  'Pet',
-  'Vestuário',
-  'Seguros',
-] as const
 
 // ---------------------------------------------------------------------------
 // Colunas exibíveis na tabela / impressão
@@ -118,32 +97,10 @@ const STATUS_CLASS: Record<string, string> = {
   manual: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
 }
 
-// Categoria -> classes de badge colorido
-const CATEGORY_CLASS: Record<string, string> = {
-  Alimentação: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  Transporte: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-  Moradia: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-  Saúde: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-  Lazer: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
-  Educação: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-  Assinaturas: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
-  Renda: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  Outros: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-  Consórcio: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
-  Transferência: 'bg-zinc-500/15 text-zinc-300 border-zinc-500/30',
-  Tarifas: 'bg-red-500/15 text-red-300 border-red-500/30',
-  'Pagamento de Cartão': 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
-  Investimento: 'bg-green-500/15 text-green-300 border-green-500/30',
-  Veículo: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  Tecnologia: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
-  Business: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
-  Pet: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
-  Vestuário: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
-  Seguros: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
-}
-
+// Categoria -> classes de badge colorido (usando meta dinâmico do banco).
 function categoryClass(cat: string) {
-  return CATEGORY_CLASS[cat] || 'bg-slate-500/15 text-slate-300 border-slate-500/30'
+  const m = getCategoryMeta(cat)
+  return `${m.bg} text-slate-200 border-slate-700`
 }
 
 const formatCurrency = (val: number) =>
@@ -206,6 +163,7 @@ function statusClass(tx: Transaction): string {
 
 export default function Transactions() {
   const { toast } = useToast()
+  const { metas: categoryMetas } = useCategories()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -568,9 +526,9 @@ export default function Transactions() {
           </SelectTrigger>
           <SelectContent className="bg-[#1E293B] border-slate-700 text-slate-200 text-xs">
             <SelectItem value="all">Todas as Categorias</SelectItem>
-            {CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
+            {categoryMetas.map((cat) => (
+              <SelectItem key={cat.name} value={cat.name}>
+                {cat.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -820,9 +778,9 @@ export default function Transactions() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1E293B] border-slate-700 text-slate-200 text-xs">
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
+                    {categoryMetas.map((c) => (
+                      <SelectItem key={c.name} value={c.name}>
+                        {c.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
