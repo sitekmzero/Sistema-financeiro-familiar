@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T13:15:02.061Z",
+  "generatedAt": "2026-08-18T15:45:07.503Z",
   "collections": [
     {
       "name": "users",
@@ -180,7 +180,18 @@
             "Educação",
             "Assinaturas",
             "Renda",
-            "Outros"
+            "Outros",
+            "Consórcio",
+            "Transferência",
+            "Tarifas",
+            "Pagamento de Cartão",
+            "Investimento",
+            "Veículo",
+            "Tecnologia",
+            "Business",
+            "Pet",
+            "Vestuário",
+            "Seguros"
           ]
         },
         {
@@ -937,20 +948,26 @@
           "required": false,
           "system": false,
           "selectValues": [
-            "Veículo",
             "Alimentação",
-            "Saúde",
+            "Transporte",
             "Moradia",
-            "Assinaturas",
-            "Tecnologia",
-            "Business",
+            "Saúde",
             "Lazer",
             "Educação",
+            "Assinaturas",
+            "Renda",
+            "Outros",
+            "Consórcio",
+            "Transferência",
+            "Tarifas",
+            "Pagamento de Cartão",
+            "Investimento",
+            "Veículo",
+            "Tecnologia",
+            "Business",
             "Pet",
             "Vestuário",
-            "Transporte",
-            "Seguros",
-            "Outros"
+            "Seguros"
           ]
         },
         {
@@ -1302,6 +1319,71 @@
         "CREATE INDEX idx_gratitude_user ON gratitude_journal (user)",
         "CREATE INDEX idx_gratitude_created ON gratitude_journal (created_at DESC)"
       ]
+    },
+    {
+      "name": "banks",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.id != \"\"",
+        "update": "@request.auth.id != \"\"",
+        "delete": "@request.auth.id != \"\""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ispb",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "logo_url",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_banks_code ON banks (code)"]
     }
   ]
 }

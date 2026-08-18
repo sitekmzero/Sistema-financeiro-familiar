@@ -1,0 +1,86 @@
+# Memory_Work — James Financeiro Familiar
+
+> Atualizado: 2026-08-19 | Última ação: Correções estruturais pós-Onda 4
+
+---
+
+## ✅ O Que Já Foi Feito
+
+| # | Onda | Entregável | Status |
+|---|------|-----------|--------|
+| 1 | Limpeza | 6 transações mock deletadas | ✅ |
+| 2 | Dashboard | Termômetro Vibracional, Gastos Alinhados vs Impulso, Insight do Dia, Bolhas de Categorias, Botão de Gratidão | ✅ |
+| 3 | James 2.0 | 20 princípios (12 Abraham + 8 Bachar), FAQ 9 perguntas | ✅ |
+| 4 | Schema | Campos de parcela, portador, original_description, document_imports, gratitude_journal | ✅ |
+| 5 | Parser C6 | 190 transações importadas, 4 duplicatas detectadas, saldo R$ 145,78 | ⚠️ Categorias erradas |
+| 6 | Conciliação | Tela /conciliacao com 3 etapas, menu lateral | ⚠️ Circular (compara dados contra si mesmos) |
+| 7 | Cadastros | Fornecedores (19), Categorias (15), Membros (3), Orçamentos (7) | ✅ |
+
+---
+
+## 🔴 O Que Está Quebrado
+
+| # | Problema | Causa | Impacto |
+|---|----------|-------|---------|
+| 1 | Categorizações erradas | Parser usa palavras-chave genéricas; "QUILOMETRO ZERO" cai em Moradia | Relatórios e dashboard distorcidos |
+| 2 | Conciliação circular | Compara transactions vs transactions da mesma conta; não usa raw_data como verdade | Nunca detecta divergência real |
+| 3 | Migration 0010 | Função matchSupplier quebrou com undefined; corrigida e reaplicada mas sem validação de integridade | Risco de dados inconsistentes |
+
+---
+
+## 🔜 O Que Ainda Precisa Ser Feito
+
+### Correções Estruturais (prioritário)
+
+| # | Tarefa | Dependência |
+|---|--------|-------------|
+| C1 | Corrigir categorias do parser (Quilômetro Zero→Renda, Porto Seguro→Consórcio, etc.) | Nenhuma |
+| C2 | Refazer conciliação: comparar document_imports.raw_data vs transactions | C1 |
+| C3 | Adicionar tabela banks (nome, código ISPB, logo) — sem migrar bank_accounts | Nenhuma |
+| C4 | Preparar parser multi-banco: detectar banco pelo PDF e rotear para conta correta | C3 |
+
+### Cadastros Faltantes (após correções)
+
+| # | Tela | O que cadastra |
+|---|------|----------------|
+| D1 | /cadastros/bancos | Instituições financeiras (via Brasil API) |
+| D2 | /cadastros/contas | Contas correntes, poupanças, cartões de crédito (substitui bank_accounts atual) |
+| D3 | /cadastros/fontes-renda | Tipos de entrada: pró-labore, comissão, renda extra |
+| D4 | /cadastros/investimentos | CDB, Tesouro, Ações, com tipo, rentabilidade, liquidez |
+
+### Futuro
+
+| # | Tarefa | Bloqueio |
+|---|--------|----------|
+| F1 | WhatsApp (Onda 5) | Token Meta Cloud API + Phone Number ID |
+| F2 | Parser Inter | Após C4 |
+| F3 | Parser Porto Visa fatura | Após C4 |
+| F4 | Parser Porto Master fatura | Após C4 |
+| F5 | Open Finance (Onda 6) | Adiado — imaturo |
+
+---
+
+## 🗂️ Estrutura de Tabelas (Schema Atual)
+
+| Coleção | Propósito | Estado |
+|---------|-----------|--------|
+| transactions | Lançamentos financeiros | ⚠️ Dados reais + categorias erradas |
+| bank_accounts | Contas e cartões (misturados) | ⚠️ Precisa separar por tipo |
+| suppliers | Fornecedores com aliases | ✅ |
+| family_members | Membros da família | ✅ |
+| budgets | Orçamentos mensais | ✅ |
+| debts | Dívidas estruturais (Caixa, Porto) | ✅ |
+| document_imports | Rastreamento de arquivos processados | ✅ Schema ok |
+| gratitude_journal | Diário de gratidão financeira | ✅ |
+| documents | Upload de arquivos | ✅ |
+| reserve_goals | Metas de reserva | ✅ |
+| trip_goals | Metas de viagem | ✅ |
+
+---
+
+## 📋 Regras de Execução
+
+1. **Nunca propor mais de 3-4 mudanças estruturais numa execução.** Se algo é fundação, vai sozinho.
+2. **Corrigir antes de expandir.** Nada de tela nova em cima de dados errados.
+3. **Testar com dados reais.** O preview deve refletir os números reais, não placeholders.
+4. **Cada execução commitada = versão nova.** Se falhar, corrigir e reexecutar; não acumular débito técnico.

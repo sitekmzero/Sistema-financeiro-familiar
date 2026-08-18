@@ -273,12 +273,36 @@ export default function Orcamentos() {
           <div className="space-y-4 mt-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-400">Categoria *</Label>
-              <Input
-                value={form.category || ''}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                placeholder="ex: Alimentação"
-                className="bg-[#0B1120] border-slate-700 text-slate-100"
-              />
+              <Select
+                value={form.category || 'Alimentação'}
+                onValueChange={(v) => setForm({ ...form, category: v })}
+              >
+                <SelectTrigger className="bg-[#0B1120] border-slate-700 text-slate-100">
+                  <SelectValue placeholder="ex: Alimentação" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#111827] border-slate-700 text-slate-100">
+                  {[
+                    'Alimentação',
+                    'Transporte',
+                    'Moradia',
+                    'Saúde',
+                    'Lazer',
+                    'Educação',
+                    'Assinaturas',
+                    'Renda',
+                    'Outros',
+                    'Consórcio',
+                    'Transferência',
+                    'Tarifas',
+                    'Pagamento de Cartão',
+                    'Investimento',
+                  ].map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-400">Limite Mensal (R$) *</Label>

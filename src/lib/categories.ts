@@ -13,6 +13,11 @@ import {
   Shirt,
   Bus,
   Package,
+  Landmark,
+  ArrowLeftRight,
+  Receipt,
+  CreditCard,
+  TrendingUp,
 } from 'lucide-react'
 
 export interface CategoryMeta {
@@ -113,6 +118,41 @@ export const CATEGORY_META: CategoryMeta[] = [
     bg: 'bg-sky-500/15',
     ring: 'ring-sky-500/30',
     icon: Package,
+  },
+  {
+    name: 'Consórcio',
+    color: '#6366F1',
+    bg: 'bg-indigo-500/15',
+    ring: 'ring-indigo-500/30',
+    icon: Landmark,
+  },
+  {
+    name: 'Transferência',
+    color: '#8B5CF6',
+    bg: 'bg-violet-500/15',
+    ring: 'ring-violet-500/30',
+    icon: ArrowLeftRight,
+  },
+  {
+    name: 'Tarifas',
+    color: '#F43F5E',
+    bg: 'bg-rose-500/15',
+    ring: 'ring-rose-500/30',
+    icon: Receipt,
+  },
+  {
+    name: 'Pagamento de Cartão',
+    color: '#D946EF',
+    bg: 'bg-fuchsia-500/15',
+    ring: 'ring-fuchsia-500/30',
+    icon: CreditCard,
+  },
+  {
+    name: 'Investimento',
+    color: '#059669',
+    bg: 'bg-emerald-600/15',
+    ring: 'ring-emerald-600/30',
+    icon: TrendingUp,
   },
   {
     name: 'Renda',

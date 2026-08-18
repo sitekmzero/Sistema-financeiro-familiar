@@ -190,14 +190,27 @@ routerAdd(
             'net',
             'vivo',
             'claro',
-            'seguro',
-            'allianz',
-            'portoseg',
-            'porto seg',
-            'consorcio',
-            'financiamento',
-            'portoseg',
+            'lej materiais',
           ],
+        },
+        {
+          // Consórcio / seguros — separado de Moradia (regra de ouro).
+          // Estas palavras só são usadas como FALLBACK quando nenhum supplier
+          // casa via aliases. Porto Seguro e Allianz têm aliases próprios.
+          cat: 'Consórcio',
+          words: ['consorcio', 'financiamento'],
+        },
+        {
+          cat: 'Tarifas',
+          words: ['seguro conta', 'iof', 'tributos federais', 'pgto de boleto', 'pgto fat cartao'],
+        },
+        {
+          cat: 'Transferência',
+          words: ['mercado pago', 'mercadopago', 'pagaleve', 'tuna'],
+        },
+        {
+          cat: 'Investimento',
+          words: ['resgate de cdb', 'resgate cdb', 'cashback atomos', 'credito boleto parcelado'],
         },
         {
           cat: 'Assinaturas',
@@ -280,16 +293,16 @@ routerAdd(
         suppliers = []
       }
 
+      // matchSupplier — REGRA DE OURO (Memory_James §7):
+      //   1. aliases primeiro (fonte primária de categorização)
+      //   2. name do supplier
+      //   3. fuzzy no name (similaridade ≥ 0.85) — último recurso
       const matchSupplier = function (desc) {
         const d = normDesc(desc)
         if (!d) return null
+        // 1. aliases exatos (substring)
         for (let i = 0; i < suppliers.length; i++) {
           const s = suppliers[i]
-          const name = norm(s.getString('name'))
-          if (!name) continue
-          if (d.indexOf(name) !== -1 || name.indexOf(d) !== -1) {
-            return s
-          }
           let aliases = []
           try {
             aliases = JSON.parse(s.getString('aliases') || '[]')
@@ -302,7 +315,16 @@ routerAdd(
             if (d.indexOf(al) !== -1 || al.indexOf(d) !== -1) return s
           }
         }
-        // fuzzy: melhor similaridade ≥ 0.85
+        // 2. name exato (substring)
+        for (let i = 0; i < suppliers.length; i++) {
+          const s = suppliers[i]
+          const name = norm(s.getString('name'))
+          if (!name) continue
+          if (d.indexOf(name) !== -1 || name.indexOf(d) !== -1) {
+            return s
+          }
+        }
+        // 3. fuzzy no name (similaridade ≥ 0.85)
         let best = null
         let bestSim = 0.85
         for (let i = 0; i < suppliers.length; i++) {

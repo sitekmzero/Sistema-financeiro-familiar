@@ -16,6 +16,7 @@ import {
   Clock,
   CheckCheck,
   ListChecks,
+  FileLock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -61,17 +62,34 @@ const CATEGORIES = [
   'Assinaturas',
   'Renda',
   'Outros',
+  'Consórcio',
+  'Transferência',
+  'Tarifas',
+  'Pagamento de Cartão',
+  'Investimento',
 ] as const
 
 const C6_DOC = 'extrato-c6-180-dias.pdf'
 
 type MatchStatus = 'ok' | 'divergent' | 'missing' | 'extra'
 
+interface RawLine {
+  date: string
+  description: string
+  amount: number
+  type: 'income' | 'expense'
+}
+
 interface MatchRow {
-  tx: Transaction
+  raw: RawLine
   status: MatchStatus
   systemTx?: Transaction
   diff?: number
+}
+
+interface ExtraRow {
+  tx: Transaction
+  status: 'extra'
 }
 
 // ----- normalização p/ batimento (mesma lógica do parser C6) ---------------
@@ -127,6 +145,32 @@ const sameDay = (a: string, b: string) => {
   return da && db && da === db
 }
 
+// Extrai o array de transações da verdade (raw_data) de um document_import.
+// raw_data pode vir como objeto já parseado (PocketBase json) ou string JSON.
+const extractRawLines = (imp?: DocumentImport | null): RawLine[] => {
+  if (!imp || imp.raw_data == null) return []
+  let data: any = imp.raw_data
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data)
+    } catch (_) {
+      return []
+    }
+  }
+  if (!data || typeof data !== 'object') return []
+  const txs = (data as any).transactions
+  if (!Array.isArray(txs)) return []
+  return txs
+    .map((t: any): RawLine => {
+      const date = String(t.date || '').slice(0, 10)
+      const description = String(t.description || t.original_description || '').trim()
+      const amount = Math.abs(parseFloat(t.amount) || 0)
+      const type = t.type === 'income' ? 'income' : 'expense'
+      return { date, description, amount, type }
+    })
+    .filter((t: RawLine) => t.description && t.amount)
+}
+
 // ----- main component ------------------------------------------------------
 
 export default function Conciliacao() {
@@ -179,7 +223,7 @@ export default function Conciliacao() {
     load()
   }, [])
 
-  // ---- dados do extrato importado (linha-a-linha) ----
+  // ---- dados do extrato importado (a VERDADE = raw_data) ----
   const selectedImport = useMemo(() => {
     return (
       imports.find((i) => i.file_name === C6_DOC && i.bank_account === selectedAccountId) ||
@@ -187,24 +231,23 @@ export default function Conciliacao() {
     )
   }, [imports, selectedAccountId])
 
+  // Conjunto A (verdade absoluta): linhas extraídas do PDF, imutáveis em raw_data
+  const rawLines = useMemo(() => extractRawLines(selectedImport), [selectedImport])
+
   const bankBalance = selectedImport?.bank_balance ?? null
 
-  // transações do extrato (source_document = C6_DOC) para a conta selecionada
-  const extratoTx = useMemo(() => {
+  // Conjunto B (sistema): transações registradas a partir deste extrato
+  const systemTx = useMemo(() => {
     return allTx.filter(
       (t) =>
         t.source_document === C6_DOC && (!selectedAccountId || t.account === selectedAccountId),
     )
   }, [allTx, selectedAccountId])
 
-  // transações do sistema (todas) para a conta selecionada
-  const systemTx = useMemo(() => {
-    return allTx.filter((t) => !selectedAccountId || t.account === selectedAccountId)
-  }, [allTx, selectedAccountId])
-
   // ---- Etapa 1: Conferência de saldo ----
+  // Saldo do banco (document_imports.bank_balance) vs. saldo calculado das
+  // transações registradas no sistema ( Conjunto B ).
   const calculatedBalance = useMemo(() => {
-    // soma das transações do sistema para a conta (income +, expense -)
     let sum = 0
     systemTx.forEach((t) => {
       sum += t.type === 'income' ? Math.abs(t.amount) : -Math.abs(t.amount)
@@ -215,23 +258,25 @@ export default function Conciliacao() {
   const balanceDiff =
     bankBalance == null ? null : Math.round((bankBalance - calculatedBalance) * 100) / 100
 
-  // ---- Etapa 2: Batimento linha-a-linha ----
-  const matchRows: MatchRow[] = useMemo(() => {
+  // ---- Etapa 2: Batimento linha-a-linha (A vs. B) ----
+  // Para cada linha da verdade (raw_data), procura a transação correspondente
+  // no sistema. Status: OK | Valor divergente | Não encontrada.
+  // Depois, transações do sistema sem correspondência na verdade = Sobrando.
+  const { matchRows, extraRows } = useMemo(() => {
     const used = new Set<string>()
     const rows: MatchRow[] = []
 
-    // para cada transação do extrato, procura correspondência no sistema
-    extratoTx.forEach((tx) => {
-      const nd = normDesc(tx.original_description || tx.description)
-      const amt = Math.abs(tx.amount)
+    rawLines.forEach((raw) => {
+      const nd = normDesc(raw.description)
+      const amt = Math.abs(raw.amount)
       let best: Transaction | undefined
       let bestSim = 0
+
       systemTx.forEach((s) => {
         if (used.has(s.id)) return
-        if (s.id === tx.id) return // não casa com ela mesma
         const sd = normDesc(s.original_description || s.description)
         const sim = similarity(nd, sd)
-        const sameDate = sameDay(s.date, tx.date)
+        const sameDate = sameDay(s.date, raw.date)
         const sameAmt = Math.abs(Math.abs(s.amount) - amt) <= 0.02
         // casamento forte: descrição similar + mesmo valor (data conta como bônus)
         let score = sim
@@ -247,43 +292,49 @@ export default function Conciliacao() {
         used.add(best.id)
         const diff = Math.round((Math.abs(best.amount) - amt) * 100) / 100
         rows.push({
-          tx,
+          raw,
           status: Math.abs(diff) <= 0.02 ? 'ok' : 'divergent',
           systemTx: best,
           diff,
         })
       } else {
-        rows.push({ tx, status: 'missing' })
+        rows.push({ raw, status: 'missing' })
       }
     })
 
-    // Sobrando: transações no sistema para esta conta que não estão no extrato
+    // Sobrando: transações no sistema (deste extrato) que não casam com nenhuma
+    // linha da verdade — indicam registro extra / duplicata não detectada.
+    const extras: ExtraRow[] = []
     systemTx.forEach((s) => {
       if (used.has(s.id)) return
-      // considera "sobrando" apenas transações que NÃO vieram deste extrato
-      if (s.source_document === C6_DOC) return
-      rows.push({ tx: s, status: 'extra' })
+      extras.push({ tx: s, status: 'extra' })
     })
 
-    return rows
-  }, [extratoTx, systemTx])
+    return { matchRows: rows, extraRows: extras }
+  }, [rawLines, systemTx])
+
+  const allRows = useMemo(
+    () => [...matchRows, ...extraRows] as Array<MatchRow | ExtraRow>,
+    [matchRows, extraRows],
+  )
 
   const counts = useMemo(() => {
     const c = { ok: 0, divergent: 0, missing: 0, extra: 0 }
     matchRows.forEach((r) => {
       c[r.status]++
     })
+    c.extra = extraRows.length
     return c
-  }, [matchRows])
+  }, [matchRows, extraRows])
 
   const filteredRows = useMemo(() => {
-    if (statusFilter === 'all') return matchRows
-    return matchRows.filter((r) => r.status === statusFilter)
-  }, [matchRows, statusFilter])
+    if (statusFilter === 'all') return allRows
+    return allRows.filter((r) => r.status === statusFilter)
+  }, [allRows, statusFilter])
 
   // ---- Etapa 3: Resumo ----
   const totalConferidas = counts.ok + counts.divergent + counts.missing
-  const reconciliado = counts.divergent === 0 && counts.missing === 0
+  const reconciliado = counts.divergent === 0 && counts.missing === 0 && counts.extra === 0
 
   // ---- Fila de revisão ----
   const ensureChoice = (txId: string) => {
@@ -393,6 +444,10 @@ export default function Conciliacao() {
           <p className="text-xs text-slate-400 mt-0.5">
             Conferência de saldo, batimento linha-a-linha e fila de revisão do James.
           </p>
+          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-sky-400">
+            <FileLock className="w-3.5 h-3.5" />
+            Verdade absoluta: <code className="font-mono">document_imports.raw_data</code>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
@@ -445,7 +500,7 @@ export default function Conciliacao() {
                 {fmtCurrency(calculatedBalance)}
               </div>
               <div className="text-[10px] text-slate-500 mt-1">
-                {systemTx.length} transações somadas
+                {systemTx.length} transações registradas
               </div>
             </div>
 
@@ -488,6 +543,9 @@ export default function Conciliacao() {
                 2
               </span>
               Batimento Linha a Linha
+              <span className="text-[11px] text-slate-500 font-normal">
+                · {rawLines.length} linhas no extrato vs {systemTx.length} no sistema
+              </span>
             </CardTitle>
 
             {/* Contadores + filtros */}
@@ -496,7 +554,7 @@ export default function Conciliacao() {
                 active={statusFilter === 'all'}
                 onClick={() => setStatusFilter('all')}
                 label="Todas"
-                count={matchRows.length}
+                count={allRows.length}
                 tone="slate"
               />
               <StatusCounter
@@ -536,46 +594,62 @@ export default function Conciliacao() {
               <TableHeader>
                 <TableRow className="border-slate-800 hover:bg-transparent">
                   <TableHead className="text-slate-400 text-xs">Data</TableHead>
-                  <TableHead className="text-slate-400 text-xs">Descrição</TableHead>
+                  <TableHead className="text-slate-400 text-xs">Descrição (extrato)</TableHead>
                   <TableHead className="text-slate-400 text-xs">Valor Extrato</TableHead>
                   <TableHead className="text-slate-400 text-xs">Valor Sistema</TableHead>
                   <TableHead className="text-slate-400 text-xs">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRows.map((row, idx) => (
-                  <TableRow key={row.tx.id + '-' + idx} className="border-slate-800/60">
-                    <TableCell className="text-xs text-slate-300 whitespace-nowrap">
-                      {fmtDate(row.tx.date)}
-                    </TableCell>
-                    <TableCell className="text-xs text-slate-100 max-w-[280px] truncate">
-                      {row.tx.original_description || row.tx.description}
-                      <div className="text-[10px] text-slate-500">
-                        {row.tx.source_document === C6_DOC ? 'Extrato C6' : 'Sistema'}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs font-mono text-slate-200">
-                      {row.tx.type === 'income' ? '+' : '−'} {fmtCurrency(Math.abs(row.tx.amount))}
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">
-                      {row.systemTx ? (
-                        <span
-                          className={
-                            row.systemTx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'
-                          }
-                        >
-                          {row.systemTx.type === 'income' ? '+' : '−'}{' '}
-                          {fmtCurrency(Math.abs(row.systemTx.amount))}
-                        </span>
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <StatusBadge status={row.status} diff={row.diff} />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredRows.map((row, idx) => {
+                  const isExtra = row.status === 'extra' && 'tx' in row && !('raw' in row)
+                  const date = isExtra ? (row as ExtraRow).tx.date : (row as MatchRow).raw.date
+                  const desc = isExtra
+                    ? (row as ExtraRow).tx.original_description || (row as ExtraRow).tx.description
+                    : (row as MatchRow).raw.description
+                  const amt = isExtra
+                    ? Math.abs((row as ExtraRow).tx.amount)
+                    : (row as MatchRow).raw.amount
+                  const type = isExtra ? (row as ExtraRow).tx.type : (row as MatchRow).raw.type
+                  const systemTx = 'systemTx' in row ? row.systemTx : undefined
+                  const diff = 'diff' in row ? row.diff : undefined
+                  return (
+                    <TableRow
+                      key={idx + '-' + date + '-' + desc.slice(0, 20)}
+                      className="border-slate-800/60"
+                    >
+                      <TableCell className="text-xs text-slate-300 whitespace-nowrap">
+                        {fmtDate(date)}
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-100 max-w-[280px] truncate">
+                        {desc}
+                        <div className="text-[10px] text-slate-500">
+                          {isExtra ? 'Sistema (sobrando)' : 'Extrato (verdade)'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-mono text-slate-200">
+                        {type === 'income' ? '+' : '−'} {fmtCurrency(amt)}
+                      </TableCell>
+                      <TableCell className="text-xs font-mono">
+                        {systemTx ? (
+                          <span
+                            className={
+                              systemTx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'
+                            }
+                          >
+                            {systemTx.type === 'income' ? '+' : '−'}{' '}
+                            {fmtCurrency(Math.abs(systemTx.amount))}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <StatusBadge status={row.status} diff={diff} />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
                 {filteredRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-xs text-slate-500 py-8">
@@ -645,8 +719,8 @@ export default function Conciliacao() {
                 </div>
                 <div className="text-[11px] text-slate-400">
                   {reconciliado
-                    ? 'Todas as transações do extrato batem com o sistema.'
-                    : `${counts.divergent + counts.missing} transação(ões) precisam de atenção.`}
+                    ? 'Todas as linhas do extrato batem com o sistema.'
+                    : `${counts.divergent + counts.missing + counts.extra} divergência(s) precisam de atenção.`}
                 </div>
               </div>
             </div>

@@ -28,6 +28,11 @@ export interface Transaction {
     | 'Assinaturas'
     | 'Renda'
     | 'Outros'
+    | 'Consórcio'
+    | 'Transferência'
+    | 'Tarifas'
+    | 'Pagamento de Cartão'
+    | 'Investimento'
   date: string
   account?: string
   source?: 'manual' | 'pdf' | 'whatsapp' | 'agent'

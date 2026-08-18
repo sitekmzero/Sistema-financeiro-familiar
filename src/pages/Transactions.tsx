@@ -45,6 +45,11 @@ const CATEGORIES = [
   'Assinaturas',
   'Renda',
   'Outros',
+  'Consórcio',
+  'Transferência',
+  'Tarifas',
+  'Pagamento de Cartão',
+  'Investimento',
 ] as const
 
 export default function Transactions() {
