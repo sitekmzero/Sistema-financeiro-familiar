@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T11:40:16.610Z",
+  "generatedAt": "2026-08-18T12:56:30.930Z",
   "collections": [
     {
       "name": "users",
@@ -204,6 +204,27 @@
           "selectValues": ["manual", "pdf", "whatsapp", "agent"]
         },
         {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
           "name": "card_id",
           "type": "relation",
           "required": false,
@@ -242,31 +263,32 @@
           "system": false
         },
         {
-          "name": "user",
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["review", "imported", "categorized"]
+        },
+        {
+          "name": "supplier",
           "type": "relation",
-          "required": true,
-          "system": false,
-          "collectionRef": "users"
-        },
-        {
-          "name": "created",
-          "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "collectionRef": "suppliers"
         },
         {
-          "name": "updated",
-          "type": "autodate",
+          "name": "import_hash",
+          "type": "text",
           "required": false,
-          "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "system": false
         }
       ],
       "indexes": [
         "CREATE INDEX idx_tx_user_date ON transactions (user, date DESC)",
         "CREATE INDEX idx_tx_category ON transactions (category)",
-        "CREATE INDEX idx_tx_type ON transactions (type)"
+        "CREATE INDEX idx_tx_type ON transactions (type)",
+        "CREATE INDEX `idx_tx_import_hash` ON `transactions` (import_hash)",
+        "CREATE INDEX `idx_tx_status` ON `transactions` (status)"
       ]
     },
     {
@@ -394,20 +416,8 @@
           "system": false
         },
         {
-          "name": "notes",
+          "name": "note",
           "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "aliases",
-          "type": "json",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "auto_detect",
-          "type": "bool",
           "required": false,
           "system": false
         },
@@ -433,7 +443,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_suppliers_user ON suppliers (user)"]
+      "indexes": ["CREATE INDEX idx_debt_payments_user_debt ON debt_payments (user, debt)"]
     },
     {
       "name": "reserve_goals",
@@ -465,34 +475,8 @@
           "system": false
         },
         {
-          "name": "color",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "account_type",
-          "type": "select",
-          "required": false,
-          "system": false,
-          "selectValues": ["checking", "savings", "credit_card", "investment", "consortium"]
-        },
-        {
-          "name": "card_brand",
-          "type": "select",
-          "required": false,
-          "system": false,
-          "selectValues": ["visa", "mastercard", "elo", "amex"]
-        },
-        {
-          "name": "card_last_four",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "additional_holders",
-          "type": "json",
+          "name": "deadline",
+          "type": "date",
           "required": false,
           "system": false
         },
@@ -518,7 +502,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_bank_accounts_user ON bank_accounts (user)"]
+      "indexes": ["CREATE INDEX idx_reserve_goals_user ON reserve_goals (user)"]
     },
     {
       "name": "reserve_contributions",
@@ -1238,6 +1222,30 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "transactions_duplicated",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "bank_balance",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "period_start",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "period_end",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

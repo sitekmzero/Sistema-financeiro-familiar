@@ -467,4 +467,127 @@ export const financeService = {
   async deleteDocumentImport(id: string): Promise<boolean> {
     return await pb.collection('document_imports').delete(id)
   },
+
+  // ----------------------------------------------------------------
+  // Onda 4 — Conciliação bancária & importação C6
+  // ----------------------------------------------------------------
+  async getAllTransactionsForAccount(accountId?: string): Promise<Transaction[]> {
+    const filter = accountId ? `account = "${accountId}"` : ''
+    return await pb.collection('transactions').getFullList<Transaction>({
+      filter,
+      sort: '-date',
+    })
+  },
+
+  async getDocumentImportsForAccount(accountId?: string): Promise<DocumentImport[]> {
+    const filter = accountId ? `bank_account = "${accountId}"` : ''
+    return await pb.collection('document_imports').getFullList<DocumentImport>({
+      filter,
+      sort: '-created',
+    })
+  },
+
+  async getReviewTransactions(accountId?: string): Promise<Transaction[]> {
+    const filter = accountId ? `account = "${accountId}" && status = "review"` : `status = "review"`
+    return await pb.collection('transactions').getFullList<Transaction>({
+      filter,
+      sort: '-date',
+    })
+  },
+
+  async approveReviewTransaction(
+    id: string,
+    data: { category: string; supplier?: string },
+  ): Promise<Transaction> {
+    return await pb.collection('transactions').update<Transaction>(id, {
+      ...data,
+      status: 'categorized',
+    })
+  },
+
+  /** Envia o texto bruto do PDF para o parser C6 no backend. */
+  async parseC6Text(
+    text: string,
+    documentId?: string,
+  ): Promise<{
+    success: boolean
+    bank: string
+    period_start: string
+    period_end: string
+    final_balance: number | null
+    transactions_found: number
+    transactions: Array<{
+      date: string
+      description: string
+      original_description: string
+      amount: number
+      type: 'income' | 'expense'
+      type_keyword: string
+      balance: number | null
+    }>
+  }> {
+    const res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/c6/parse`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: pb.authStore.token,
+      },
+      body: JSON.stringify({ text, document_id: documentId }),
+    })
+    const data = await res.json().catch(() => ({ error: 'Falha ao processar extrato C6.' }))
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro no parser C6.')
+    }
+    return data
+  },
+
+  /** Importa transações via pipeline completo (anti-dup + categorização). */
+  async importC6Transactions(payload: {
+    document_id?: string
+    bank_account?: string
+    file_name: string
+    source?: string
+    period_start?: string
+    period_end?: string
+    final_balance?: number | null
+    transactions: Array<{
+      date: string
+      description: string
+      original_description: string
+      amount: number
+      type: 'income' | 'expense'
+    }>
+  }): Promise<{
+    success: boolean
+    document_import_id: string
+    transactions_found: number
+    transactions_imported: number
+    transactions_duplicated: number
+    transactions_pending: number
+    message: string
+  }> {
+    const res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/documents/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: pb.authStore.token,
+      },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json().catch(() => ({ error: 'Falha ao importar transações.' }))
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro na importação.')
+    }
+    return data
+  },
+
+  async addSupplierAlias(supplierId: string, alias: string): Promise<Supplier> {
+    const s = await pb.collection('suppliers').getOne<Supplier>(supplierId)
+    const aliases: string[] = Array.isArray(s.aliases) ? [...s.aliases] : []
+    const a = alias.trim()
+    if (a && !aliases.some((x) => x.toLowerCase() === a.toLowerCase())) {
+      aliases.push(a)
+    }
+    return await pb.collection('suppliers').update<Supplier>(supplierId, { aliases })
+  },
 }

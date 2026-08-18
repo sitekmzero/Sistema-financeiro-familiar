@@ -37,6 +37,9 @@ export interface Transaction {
   family_member?: string
   source_document?: string
   original_description?: string
+  status?: 'review' | 'imported' | 'categorized'
+  supplier?: string
+  import_hash?: string
   user: string
   created: string
   updated: string
@@ -208,6 +211,10 @@ export interface DocumentImport {
   transactions_pending?: number
   status?: 'processing' | 'review' | 'imported' | 'error'
   raw_data?: unknown
+  transactions_duplicated?: number
+  bank_balance?: number
+  period_start?: string
+  period_end?: string
   user: string
   created: string
   updated: string
