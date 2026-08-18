@@ -95,3 +95,155 @@
 .animate-pulse-record {
   animation: pulseRecord 1.2s ease-in-out infinite;
 }
+
+/* ----------------------------------------------------------------
+   Sistema de Impressão — Relatório A4 de Transações
+   ---------------------------------------------------------------- */
+/* Wrapper do preview dentro do modal: simula uma página A4 */
+.print-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #ffffff;
+  color: #0b1120;
+  padding: 12mm;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+
+.print-page * {
+  visibility: visible;
+}
+
+.print-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #10b981;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.print-header .print-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.print-header .print-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10b981, #14b8a6 50%, #f59e0b);
+  color: #0b1120;
+  font-weight: 700;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Sora', sans-serif;
+}
+
+.print-footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #cbd5e1;
+  font-size: 10px;
+  color: #475569;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Tabela no papel: zebrada e compacta */
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.print-table thead th {
+  background: #0b1120;
+  color: #f8fafc;
+  text-align: left;
+  padding: 6px 8px;
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.print-table tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+
+.print-table tbody tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+.print-amount-in {
+  color: #047857;
+  font-weight: 600;
+}
+
+.print-amount-out {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.print-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* Quando o usuário dispara window.print(), escondemos tudo
+   que não faz parte da página de impressão. Técncia clássica de
+   visibility: mostra apenas a subárvore .print-page (mesmo
+   dentro do portal do modal). */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0b1120 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-page,
+  .print-page * {
+    visibility: visible !important;
+  }
+
+  .print-page {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

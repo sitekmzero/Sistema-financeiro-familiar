@@ -42,6 +42,14 @@ export const financeService = {
     ).items
   },
 
+  /** Transações com relações (account, supplier, family_member) expandidas. */
+  async getTransactionsExpanded(limit = 1000): Promise<Transaction[]> {
+    return await pb.collection('transactions').getFullList<Transaction>({
+      sort: '-date',
+      expand: 'account,supplier,family_member',
+    })
+  },
+
   async createTransaction(data: Partial<Transaction>): Promise<Transaction> {
     return await pb.collection('transactions').create<Transaction>({
       ...data,

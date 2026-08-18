@@ -18,21 +18,7 @@ export interface Transaction {
   description: string
   amount: number
   type: 'income' | 'expense'
-  category:
-    | 'Alimentação'
-    | 'Transporte'
-    | 'Moradia'
-    | 'Saúde'
-    | 'Lazer'
-    | 'Educação'
-    | 'Assinaturas'
-    | 'Renda'
-    | 'Outros'
-    | 'Consórcio'
-    | 'Transferência'
-    | 'Tarifas'
-    | 'Pagamento de Cartão'
-    | 'Investimento'
+  category: string
   date: string
   account?: string
   source?: 'manual' | 'pdf' | 'whatsapp' | 'agent'
