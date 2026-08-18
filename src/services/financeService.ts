@@ -15,6 +15,8 @@ import type {
   Budget,
   FamilyMember,
   AppUser,
+  GratitudeJournalEntry,
+  DocumentImport,
 } from '@/types/finance'
 
 export const financeService = {
@@ -416,5 +418,53 @@ export const financeService = {
   },
   async deleteFamilyMember(id: string): Promise<boolean> {
     return await pb.collection('family_members').delete(id)
+  },
+
+  // ----------------------------------------------------------------
+  // Onda 4 — Gratidão Financeira + Importações de documentos
+  // ----------------------------------------------------------------
+  // Gratitude Journal
+  async getGratitudeEntries(limit = 100): Promise<GratitudeJournalEntry[]> {
+    return (
+      await pb.collection('gratitude_journal').getList<GratitudeJournalEntry>(1, limit, {
+        sort: '-created_at',
+      })
+    ).items
+  },
+
+  async createGratitudeEntry(entry: string, date?: string): Promise<GratitudeJournalEntry> {
+    return await pb.collection('gratitude_journal').create<GratitudeJournalEntry>({
+      entry,
+      created_at: date || new Date().toISOString(),
+      user: pb.authStore.record?.id,
+    })
+  },
+
+  async deleteGratitudeEntry(id: string): Promise<boolean> {
+    return await pb.collection('gratitude_journal').delete(id)
+  },
+
+  // Document Imports
+  async getDocumentImports(limit = 100): Promise<DocumentImport[]> {
+    return (
+      await pb.collection('document_imports').getList<DocumentImport>(1, limit, {
+        sort: '-created',
+      })
+    ).items
+  },
+
+  async createDocumentImport(data: Partial<DocumentImport>): Promise<DocumentImport> {
+    return await pb.collection('document_imports').create<DocumentImport>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+
+  async updateDocumentImport(id: string, data: Partial<DocumentImport>): Promise<DocumentImport> {
+    return await pb.collection('document_imports').update<DocumentImport>(id, data)
+  },
+
+  async deleteDocumentImport(id: string): Promise<boolean> {
+    return await pb.collection('document_imports').delete(id)
   },
 }

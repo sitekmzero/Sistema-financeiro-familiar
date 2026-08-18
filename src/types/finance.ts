@@ -4,6 +4,10 @@ export interface BankAccount {
   bank_name?: string
   balance: number
   color?: string
+  account_type?: 'checking' | 'savings' | 'credit_card' | 'investment' | 'consortium'
+  card_brand?: 'visa' | 'mastercard' | 'elo' | 'amex'
+  card_last_four?: string
+  additional_holders?: Array<{ name: string; last_four: string }>
   user: string
   created: string
   updated: string
@@ -27,6 +31,12 @@ export interface Transaction {
   date: string
   account?: string
   source?: 'manual' | 'pdf' | 'whatsapp' | 'agent'
+  card_id?: string
+  installment_current?: number
+  installment_total?: number
+  family_member?: string
+  source_document?: string
+  original_description?: string
   user: string
   created: string
   updated: string
@@ -171,6 +181,33 @@ export interface Supplier {
   recurrence?: 'Mensal' | 'Semanal' | 'Esporádico' | 'Anual'
   payment_method?: string
   notes?: string
+  aliases?: string[]
+  auto_detect?: boolean
+  user: string
+  created: string
+  updated: string
+}
+
+export interface GratitudeJournalEntry {
+  id: string
+  entry: string
+  created_at: string
+  user: string
+  created: string
+  updated: string
+}
+
+export interface DocumentImport {
+  id: string
+  file_name: string
+  file_type?: 'pdf' | 'csv' | 'ofx' | 'jpg' | 'png'
+  source?: 'bank_statement' | 'credit_card_bill' | 'consortium_statement' | 'receipt'
+  bank_account?: string
+  transactions_found?: number
+  transactions_imported?: number
+  transactions_pending?: number
+  status?: 'processing' | 'review' | 'imported' | 'error'
+  raw_data?: unknown
   user: string
   created: string
   updated: string

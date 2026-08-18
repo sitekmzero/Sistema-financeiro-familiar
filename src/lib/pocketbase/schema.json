@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T23:49:02.641Z",
+  "generatedAt": "2026-08-18T11:40:16.610Z",
   "collections": [
     {
       "name": "users",
@@ -106,6 +106,32 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "account_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["checking", "savings", "credit_card", "investment", "consortium"]
+        },
+        {
+          "name": "card_brand",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["visa", "mastercard", "elo", "amex"]
+        },
+        {
+          "name": "card_last_four",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "additional_holders",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_bank_accounts_user ON bank_accounts (user)"]
@@ -176,6 +202,44 @@
           "required": false,
           "system": false,
           "selectValues": ["manual", "pdf", "whatsapp", "agent"]
+        },
+        {
+          "name": "card_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "bank_accounts"
+        },
+        {
+          "name": "installment_current",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "installment_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "family_member",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "family_members"
+        },
+        {
+          "name": "source_document",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "original_description",
+          "type": "text",
+          "required": false,
+          "system": false
         },
         {
           "name": "user",
@@ -330,8 +394,20 @@
           "system": false
         },
         {
-          "name": "note",
+          "name": "notes",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aliases",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "auto_detect",
+          "type": "bool",
           "required": false,
           "system": false
         },
@@ -357,7 +433,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_debt_payments_user_debt ON debt_payments (user, debt)"]
+      "indexes": ["CREATE INDEX idx_suppliers_user ON suppliers (user)"]
     },
     {
       "name": "reserve_goals",
@@ -389,8 +465,34 @@
           "system": false
         },
         {
-          "name": "deadline",
-          "type": "date",
+          "name": "color",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "account_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["checking", "savings", "credit_card", "investment", "consortium"]
+        },
+        {
+          "name": "card_brand",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["visa", "mastercard", "elo", "amex"]
+        },
+        {
+          "name": "card_last_four",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "additional_holders",
+          "type": "json",
           "required": false,
           "system": false
         },
@@ -416,7 +518,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_reserve_goals_user ON reserve_goals (user)"]
+      "indexes": ["CREATE INDEX idx_bank_accounts_user ON bank_accounts (user)"]
     },
     {
       "name": "reserve_contributions",
@@ -906,6 +1008,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "aliases",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "auto_detect",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_suppliers_user ON suppliers (user)"]
@@ -1034,6 +1148,152 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_family_members_user ON family_members (user)"]
+    },
+    {
+      "name": "document_imports",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "file_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "file_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pdf", "csv", "ofx", "jpg", "png"]
+        },
+        {
+          "name": "source",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["bank_statement", "credit_card_bill", "consortium_statement", "receipt"]
+        },
+        {
+          "name": "bank_account",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "bank_accounts"
+        },
+        {
+          "name": "transactions_found",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "transactions_imported",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "transactions_pending",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["processing", "review", "imported", "error"]
+        },
+        {
+          "name": "raw_data",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_document_imports_user ON document_imports (user)",
+        "CREATE INDEX idx_document_imports_status ON document_imports (status)"
+      ]
+    },
+    {
+      "name": "gratitude_journal",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "entry",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_gratitude_user ON gratitude_journal (user)",
+        "CREATE INDEX idx_gratitude_created ON gratitude_journal (created_at DESC)"
+      ]
     }
   ]
 }
