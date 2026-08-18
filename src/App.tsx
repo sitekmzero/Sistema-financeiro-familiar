@@ -13,6 +13,7 @@ import Reserve from '@/pages/Reserve'
 import Trips from '@/pages/Trips'
 import Reports from '@/pages/Reports'
 import Documents from '@/pages/Documents'
+import Conciliacao from '@/pages/Conciliacao'
 import Chat from '@/pages/Chat'
 import CadastrosIndex from '@/pages/CadastrosIndex'
 import Fornecedores from '@/pages/Fornecedores'
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="viagens" element={<Trips />} />
             <Route path="relatorios" element={<Reports />} />
             <Route path="documentos" element={<Documents />} />
+            <Route path="conciliacao" element={<Conciliacao />} />
             <Route path="chat" element={<Chat />} />
             <Route path="cadastros" element={<CadastrosIndex />} />
             <Route path="cadastros/fornecedores" element={<Fornecedores />} />

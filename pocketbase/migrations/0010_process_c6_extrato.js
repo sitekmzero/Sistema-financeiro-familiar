@@ -224,19 +224,28 @@ migrate(
     } catch (_) {}
     const matchSupplier = function (desc) {
       const d = normDesc(desc)
-      if (!d) return null
+      if (!d || !suppliers || !suppliers.length) return null
       for (let i = 0; i < suppliers.length; i++) {
         const s = suppliers[i]
+        if (!s) continue
         const name = norm(s.getString('name'))
         if (!name) continue
         if (d.indexOf(name) !== -1 || name.indexOf(d) !== -1) return s
         let aliases = []
         try {
-          aliases = JSON.parse(s.getString('aliases') || '[]')
+          const raw = s.getString('aliases')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed && typeof parsed === 'object' && typeof parsed.length === 'number') {
+              aliases = parsed
+            }
+          }
         } catch (_) {}
-        for (let j = 0; j < aliases.length; j++) {
-          const al = norm(aliases[j])
-          if (al && (d.indexOf(al) !== -1 || al.indexOf(d) !== -1)) return s
+        if (aliases && aliases.length) {
+          for (let j = 0; j < aliases.length; j++) {
+            const al = norm(aliases[j])
+            if (al && (d.indexOf(al) !== -1 || al.indexOf(d) !== -1)) return s
+          }
         }
       }
       let best = null,
