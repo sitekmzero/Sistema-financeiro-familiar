@@ -158,3 +158,50 @@ export interface MentorQuote {
   author: 'Abraham Hicks' | 'Bachar'
   theme: string
 }
+
+// ----------------------------------------------------------------
+// Onda 3 — Cadastros integrados
+// ----------------------------------------------------------------
+
+export interface Supplier {
+  id: string
+  name: string
+  cnpj?: string
+  category?: string
+  recurrence?: 'Mensal' | 'Semanal' | 'Esporádico' | 'Anual'
+  payment_method?: string
+  notes?: string
+  user: string
+  created: string
+  updated: string
+}
+
+export interface Budget {
+  id: string
+  category: string
+  monthly_limit: number
+  month?: string
+  alert_threshold?: number
+  user: string
+  created: string
+  updated: string
+}
+
+export interface FamilyMember {
+  id: string
+  name: string
+  email?: string
+  role?: 'Titular' | 'Cônjuge' | 'Filho(a)'
+  monthly_allowance?: number
+  card_number?: string
+  user: string
+  created: string
+  updated: string
+}
+
+export interface AppUser {
+  id: string
+  name?: string
+  email?: string
+  role?: 'admin' | 'member'
+}

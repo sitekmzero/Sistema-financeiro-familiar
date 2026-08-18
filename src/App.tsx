@@ -14,6 +14,11 @@ import Trips from '@/pages/Trips'
 import Reports from '@/pages/Reports'
 import Documents from '@/pages/Documents'
 import Chat from '@/pages/Chat'
+import CadastrosIndex from '@/pages/CadastrosIndex'
+import Fornecedores from '@/pages/Fornecedores'
+import Categorias from '@/pages/Categorias'
+import Membros from '@/pages/Membros'
+import Orcamentos from '@/pages/Orcamentos'
 import NotFound from '@/pages/NotFound'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -63,6 +68,11 @@ export default function App() {
             <Route path="relatorios" element={<Reports />} />
             <Route path="documentos" element={<Documents />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="cadastros" element={<CadastrosIndex />} />
+            <Route path="cadastros/fornecedores" element={<Fornecedores />} />
+            <Route path="cadastros/categorias" element={<Categorias />} />
+            <Route path="cadastros/membros" element={<Membros />} />
+            <Route path="cadastros/orcamentos" element={<Orcamentos />} />
           </Route>
 
           {/* 404 Route */}

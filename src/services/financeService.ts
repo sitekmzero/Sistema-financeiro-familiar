@@ -11,6 +11,10 @@ import type {
   DocumentItem,
   ChatMessage,
   WeeklyReport,
+  Supplier,
+  Budget,
+  FamilyMember,
+  AppUser,
 } from '@/types/finance'
 
 export const financeService = {
@@ -323,5 +327,94 @@ export const financeService = {
     }
 
     return await res.json()
+  },
+
+  // Transcribe audio (Whisper) — Onda 2
+  async transcribeAudio(base64: string, mime: string, filename: string): Promise<{ text: string }> {
+    const res = await fetch(
+      `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/agents/james/transcribe`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: pb.authStore.token,
+        },
+        body: JSON.stringify({ audio: base64, mime, filename }),
+      },
+    )
+    const data = await res.json().catch(() => ({ error: 'Falha ao transcrever áudio.' }))
+    if (!res.ok) {
+      throw new Error(data.error || 'Não consegui entender o áudio.')
+    }
+    return { text: data.text || '' }
+  },
+
+  // ----------------------------------------------------------------
+  // Onda 1 — Reports: bulk transactions, accounts, users
+  // ----------------------------------------------------------------
+  async getAllTransactions(): Promise<Transaction[]> {
+    return await pb.collection('transactions').getFullList<Transaction>({ sort: '-date' })
+  },
+
+  async getAllAccounts(): Promise<BankAccount[]> {
+    return await pb.collection('bank_accounts').getFullList<BankAccount>({ sort: 'name' })
+  },
+
+  async getFamilyUsers(): Promise<AppUser[]> {
+    return await pb.collection('users').getFullList<AppUser>({ sort: 'name' })
+  },
+
+  // ----------------------------------------------------------------
+  // Onda 3 — Registers CRUD
+  // ----------------------------------------------------------------
+  // Suppliers
+  async getSuppliers(): Promise<Supplier[]> {
+    return await pb.collection('suppliers').getFullList<Supplier>({ sort: 'name' })
+  },
+  async createSupplier(data: Partial<Supplier>): Promise<Supplier> {
+    return await pb.collection('suppliers').create<Supplier>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateSupplier(id: string, data: Partial<Supplier>): Promise<Supplier> {
+    return await pb.collection('suppliers').update<Supplier>(id, data)
+  },
+  async deleteSupplier(id: string): Promise<boolean> {
+    return await pb.collection('suppliers').delete(id)
+  },
+
+  // Budgets
+  async getBudgets(): Promise<Budget[]> {
+    return await pb.collection('budgets').getFullList<Budget>({ sort: 'category' })
+  },
+  async createBudget(data: Partial<Budget>): Promise<Budget> {
+    return await pb.collection('budgets').create<Budget>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateBudget(id: string, data: Partial<Budget>): Promise<Budget> {
+    return await pb.collection('budgets').update<Budget>(id, data)
+  },
+  async deleteBudget(id: string): Promise<boolean> {
+    return await pb.collection('budgets').delete(id)
+  },
+
+  // Family members
+  async getFamilyMembers(): Promise<FamilyMember[]> {
+    return await pb.collection('family_members').getFullList<FamilyMember>({ sort: 'name' })
+  },
+  async createFamilyMember(data: Partial<FamilyMember>): Promise<FamilyMember> {
+    return await pb.collection('family_members').create<FamilyMember>({
+      ...data,
+      user: pb.authStore.record?.id,
+    })
+  },
+  async updateFamilyMember(id: string, data: Partial<FamilyMember>): Promise<FamilyMember> {
+    return await pb.collection('family_members').update<FamilyMember>(id, data)
+  },
+  async deleteFamilyMember(id: string): Promise<boolean> {
+    return await pb.collection('family_members').delete(id)
   },
 }

@@ -10,6 +10,7 @@ import {
   Plane,
   FileBarChart,
   FileText,
+  Settings,
   MessageSquare,
   Bell,
   LogOut,
@@ -36,6 +37,7 @@ const navItems = [
   { path: '/reserva', label: 'Reserva', icon: ShieldCheck },
   { path: '/viagens', label: 'Viagens', icon: Plane },
   { path: '/relatorios', label: 'Relatórios', icon: FileBarChart },
+  { path: '/cadastros', label: 'Cadastros', icon: Settings },
   { path: '/documentos', label: 'Documentos', icon: FileText },
 ]
 
@@ -77,6 +79,8 @@ export default function Layout() {
         return 'Planejamento de Férias & Viagens'
       case '/relatorios':
         return 'Relatórios Semanais & Insights'
+      case '/cadastros':
+        return 'Cadastros & Configurações'
       case '/documentos':
         return 'Extratos Bancários & Leitura PDF'
       case '/chat':

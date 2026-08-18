@@ -15,6 +15,9 @@ import {
   FileBarChart,
   DollarSign,
   Quote,
+  Mic,
+  Square,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +41,13 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Voice recording (Onda 2)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadMessages = async () => {
     try {
@@ -115,6 +125,137 @@ export default function Chat() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
+    }
+  }
+
+  // ---- Voice recording (Onda 2) ----
+  const pickMimeType = (): string => {
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+    ]
+    for (const c of candidates) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(c)) {
+        return c
+      }
+    }
+    return 'audio/webm'
+  }
+
+  const stopRecording = () => {
+    const rec = mediaRecorderRef.current
+    if (rec && rec.state !== 'inactive') {
+      rec.stop()
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+  }
+
+  const startRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') {
+        toast({
+          title: 'Microfone indisponível',
+          description: 'Seu navegador não suporta gravação de áudio.',
+          variant: 'destructive',
+        })
+        return
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mimeType = pickMimeType()
+      const recorder = new MediaRecorder(stream, { mimeType })
+      audioChunksRef.current = []
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((tr) => tr.stop())
+        await transcribeAndSend()
+      }
+      recorder.start()
+      mediaRecorderRef.current = recorder
+      setIsRecording(true)
+
+      // auto-stop at 60s
+      recordingTimerRef.current = setInterval(() => {
+        const r = mediaRecorderRef.current
+        if (r && r.state !== 'inactive' && Date.now() - (r as any)._startedAt > 60000) {
+          stopRecording()
+        }
+      }, 500)
+      ;(recorder as any)._startedAt = Date.now()
+    } catch (err: any) {
+      console.error('Mic access failed:', err)
+      toast({
+        title: 'Não foi possível acessar o microfone',
+        description: 'Verifique as permissões do navegador e tente novamente.',
+        variant: 'destructive',
+      })
+      setIsRecording(false)
+    }
+  }
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }
+
+  const transcribeAndSend = async () => {
+    setIsRecording(false)
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+    const chunks = audioChunksRef.current
+    if (chunks.length === 0) return
+
+    const mimeType = pickMimeType()
+    const blob = new Blob(chunks, { type: mimeType })
+    // whisper needs ~ a bit of data
+    if (blob.size < 500) {
+      toast({
+        title: 'Áudio muito curto',
+        description: 'Grave por alguns segundos antes de enviar.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsTranscribing(true)
+    try {
+      const base64 = await blobToBase64(blob)
+      const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm'
+      const filename = `audio-james.${ext}`
+      const { text } = await financeService.transcribeAudio(base64, mimeType, filename)
+
+      if (!text || !text.trim()) {
+        toast({
+          title: 'Não consegui entender o áudio',
+          description: 'Tente novamente falando mais perto do microfone.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      setInputValue(text.trim())
+      await handleSendMessage(text.trim())
+    } catch (err: any) {
+      console.error('Transcribe failed:', err)
+      toast({
+        title: 'Não consegui entender o áudio. Tente novamente.',
+        description: err?.message || '',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsTranscribing(false)
+      audioChunksRef.current = []
     }
   }
 
@@ -231,6 +372,19 @@ export default function Chat() {
           </div>
         )}
 
+        {/* Listening indicator (Onda 2) */}
+        {isTranscribing && (
+          <div className="flex items-end gap-2 justify-start">
+            <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs shrink-0">
+              £
+            </div>
+            <div className="bg-[#1E293B] border border-slate-800 p-3 rounded-2xl rounded-bl-xs flex items-center gap-2 text-xs text-slate-300">
+              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+              <span>Ouvindo…</span>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -276,12 +430,50 @@ export default function Chat() {
         <Button
           type="button"
           onClick={() => handleSendMessage()}
-          disabled={isTyping || !inputValue.trim()}
+          disabled={isTyping || isTranscribing || !inputValue.trim()}
           className="h-11 w-11 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl shrink-0 flex items-center justify-center shadow-lg shadow-emerald-500/20"
         >
           <Send className="w-4 h-4" />
         </Button>
+
+        <Button
+          type="button"
+          onClick={toggleRecording}
+          disabled={isTyping || isTranscribing}
+          title={isRecording ? 'Parar e enviar áudio' : 'Falar com o James'}
+          className={`h-11 w-11 rounded-xl shrink-0 flex items-center justify-center transition-all ${
+            isRecording
+              ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse-record'
+              : 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700'
+          }`}
+        >
+          {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-5 h-5" />}
+        </Button>
       </div>
+
+      {/* Recording hint */}
+      {isRecording && (
+        <div className="px-4 pb-2 bg-[#1E293B] border-t border-slate-800/0 flex items-center gap-2 text-[11px] text-rose-300">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          Gravando… clique no microfone novamente para parar e enviar (máx. 60s).
+        </div>
+      )}
     </div>
   )
+}
+
+// ---- helpers (Onda 2) -----------------------------------------------------
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = reader.result as string
+      // strip "data:audio/webm;base64," prefix
+      const comma = result.indexOf(',')
+      resolve(comma >= 0 ? result.slice(comma + 1) : result)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
